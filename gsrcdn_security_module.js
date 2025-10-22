@@ -1,431 +1,303 @@
 /**
- * Google Apps Script - E-Commerce API with CORS Support
- * Server-side implementation matching client-side GSRCDN Security Module
- * Deploy as: Web App -> Execute as: Me -> Who has access: Anyone
+ * GSRCDN Security Module
+ * Version: 1.0.0
+ * A standalone module for secure API requests with HMAC signature authentication
+ * 
+ * Usage:
+ * 1. Include CryptoJS before this module
+ * 2. Configure: gsrcdnSecurity.configure({...})
+ * 3. Use: await gsrcdnSecurity.makeSecureRequest({...})
+ * 
+ * Or use standalone functions:
+ * - computeHMAC(params, secret)
+ * - createSignature(params, secret)
+ * - makeSecureRequest(params, options)
  */
 
-// Configuration
-const CONFIG = {
-  SHEET_ID: 'YOUR_SHEET_ID', // Replace with your Google Sheet ID
-  API_TOKEN: 'tok_25dc153a0d1a2f86fe34f394f6d6a3cb',
-  HMAC_SECRET: 'df62617b8f084303f70ef7f1cf68952302b4960b7a1dfceddd5f2a851685937e',
-  DEBUG: true
-};
-
-/**
- * Handle GET requests - MAIN ENTRY POINT
- */
-function doGet(e) {
-  return handleRequest(e);
-}
-
-/**
- * Handle POST requests
- */
-function doPost(e) {
-  return handleRequest(e);
-}
-
-/**
- * Main request handler
- */
-function handleRequest(e) {
-  try {
-    const params = e.parameter || {};
+(function(window) {
+    'use strict';
     
-    if (CONFIG.DEBUG) {
-      Logger.log('=== REQUEST START ===');
-      Logger.log('Received params: ' + JSON.stringify(params));
+    /**
+     * Check if CryptoJS is available
+     */
+    if (typeof CryptoJS === 'undefined') {
+        console.error('GSRCDN Security: CryptoJS is required. Please include https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js before this module.');
+        return;
     }
     
-    // Validate token
-    if (!params.token || params.token !== CONFIG.API_TOKEN) {
-      if (CONFIG.DEBUG) Logger.log('ERROR: Invalid token');
-      return createResponse({
-        status: 'error',
-        message: 'Invalid API token'
-      });
-    }
-    
-    // Validate signature
-    const isValidSignature = validateSignature(params, CONFIG.HMAC_SECRET);
-    if (!isValidSignature) {
-      if (CONFIG.DEBUG) Logger.log('ERROR: Invalid signature');
-      return createResponse({
-        status: 'error',
-        message: 'Invalid signature'
-      });
-    }
-    
-    // Validate timestamp (5 minute window)
-    const timestamp = parseInt(params.timestamp);
-    const now = Date.now();
-    const timeDiff = Math.abs(now - timestamp);
-    if (timeDiff > 300000) {
-      if (CONFIG.DEBUG) Logger.log('ERROR: Request expired. Time diff: ' + timeDiff);
-      return createResponse({
-        status: 'error',
-        message: 'Request expired'
-      });
-    }
-    
-    // Route action
-    let result;
-    switch(params.action) {
-      case 'getData':
-        result = getData(params);
-        break;
-      case 'createOrder':
-        result = createOrder(params);
-        break;
-      case 'updateStock':
-        result = updateStock(params);
-        break;
-      default:
-        result = {
-          status: 'error',
-          message: 'Invalid action: ' + params.action
-        };
-    }
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('Response: ' + JSON.stringify(result));
-      Logger.log('=== REQUEST END ===');
-    }
-    
-    return createResponse(result);
-    
-  } catch (error) {
-    Logger.log('ERROR: ' + error.toString());
-    Logger.log('Stack: ' + error.stack);
-    return createResponse({
-      status: 'error',
-      message: error.toString()
-    });
-  }
-}
-
-/**
- * Create response with proper headers
- */
-function createResponse(data) {
-  const json = JSON.stringify(data);
-  return ContentService
-    .createTextOutput(json)
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-/**
- * Compute HMAC SHA256 - Server Side
- * Matches client-side: CryptoJS.HmacSHA256(params, secret).toString()
- */
-function computeHMAC(params, secret) {
-  try {
-    const signature = Utilities.computeHmacSha256Signature(
-      params,
-      secret
-    );
-    
-    // Convert to hex string (same as CryptoJS output)
-    const hexString = signature.map(function(byte) {
-      const hex = (byte & 0xFF).toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    }).join('');
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('computeHMAC input: ' + params);
-      Logger.log('computeHMAC output: ' + hexString);
-    }
-    
-    return hexString;
-  } catch (error) {
-    Logger.log('computeHMAC error: ' + error.toString());
-    throw error;
-  }
-}
-
-/**
- * Create signature from parameters - Server Side
- * Matches client-side createSignature function exactly
- */
-function createSignature(params, secret) {
-  try {
-    // Sort keys alphabetically (same as client)
-    const sortedKeys = Object.keys(params).sort();
-    
-    // Create signature string: key1=value1&key2=value2
-    const signatureString = sortedKeys
-      .map(function(key) {
-        return key + '=' + params[key];
-      })
-      .join('&');
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('Signature string: ' + signatureString);
-    }
-    
-    // Compute HMAC
-    const signature = computeHMAC(signatureString, secret);
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('Computed signature: ' + signature);
-    }
-    
-    return signature;
-  } catch (error) {
-    Logger.log('createSignature error: ' + error.toString());
-    throw error;
-  }
-}
-
-/**
- * Validate HMAC signature - Server Side
- * Matches client-side signature validation
- */
-function validateSignature(params, secret) {
-  try {
-    const receivedSignature = params.signature;
-    
-    if (!receivedSignature) {
-      if (CONFIG.DEBUG) Logger.log('No signature provided');
-      return false;
-    }
-    
-    // Create params object without signature (same as client)
-    const paramsForSigning = {};
-    Object.keys(params).forEach(function(key) {
-      if (key !== 'signature') {
-        paramsForSigning[key] = params[key];
-      }
-    });
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('Params for signing: ' + JSON.stringify(paramsForSigning));
-      Logger.log('Received signature: ' + receivedSignature);
-    }
-    
-    // Compute expected signature
-    const computedSignature = createSignature(paramsForSigning, secret);
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('Computed signature: ' + computedSignature);
-      Logger.log('Signatures match: ' + (computedSignature === receivedSignature));
-    }
-    
-    return computedSignature === receivedSignature;
-    
-  } catch (error) {
-    Logger.log('validateSignature error: ' + error.toString());
-    return false;
-  }
-}
-
-/**
- * Get data from sheet
- */
-function getData(params) {
-  try {
-    const dataType = params.dataType || 'products';
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('getData called with dataType: ' + dataType);
-    }
-    
-    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-    
-    let sheet;
-    if (dataType === 'products') {
-      sheet = ss.getSheetByName('Products');
-    } else if (dataType === 'orders') {
-      sheet = ss.getSheetByName('Orders');
-    } else if (dataType === 'categories') {
-      sheet = ss.getSheetByName('Categories');
-    } else {
-      return {
-        status: 'error',
-        message: 'Invalid data type: ' + dataType
-      };
-    }
-    
-    if (!sheet) {
-      return {
-        status: 'error',
-        message: 'Sheet not found: ' + dataType
-      };
-    }
-    
-    const data = sheet.getDataRange().getValues();
-    
-    if (data.length === 0) {
-      return {
-        status: 'success',
-        data: [],
-        count: 0
-      };
-    }
-    
-    const headers = data[0];
-    const rows = data.slice(1);
-    
-    // Convert to array of objects
-    const result = rows.map(function(row) {
-      const obj = {};
-      headers.forEach(function(header, index) {
-        obj[header] = row[index];
-      });
-      return obj;
-    });
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('Found ' + result.length + ' records');
-    }
-    
-    return {
-      status: 'success',
-      data: result,
-      count: result.length
-    };
-    
-  } catch (error) {
-    Logger.log('getData error: ' + error.toString());
-    return {
-      status: 'error',
-      message: error.toString()
-    };
-  }
-}
-
-/**
- * Create order
- */
-function createOrder(params) {
-  try {
-    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-    const sheet = ss.getSheetByName('Orders');
-    
-    if (!sheet) {
-      return {
-        status: 'error',
-        message: 'Orders sheet not found'
-      };
-    }
-    
-    const orderId = 'ORD' + Date.now();
-    const timestamp = new Date();
-    
-    sheet.appendRow([
-      orderId,
-      params.customerName || '',
-      params.customerPhone || '',
-      params.customerAddress || '',
-      params.items || '',
-      params.total || 0,
-      params.delivery || 'home',
-      timestamp,
-      'pending'
-    ]);
-    
-    if (CONFIG.DEBUG) {
-      Logger.log('Order created: ' + orderId);
-    }
-    
-    return {
-      status: 'success',
-      orderId: orderId,
-      message: 'Order created successfully'
-    };
-    
-  } catch (error) {
-    Logger.log('createOrder error: ' + error.toString());
-    return {
-      status: 'error',
-      message: error.toString()
-    };
-  }
-}
-
-/**
- * Update stock
- */
-function updateStock(params) {
-  try {
-    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-    const sheet = ss.getSheetByName('Products');
-    
-    if (!sheet) {
-      return {
-        status: 'error',
-        message: 'Products sheet not found'
-      };
-    }
-    
-    const productId = params.productId;
-    const newStock = parseInt(params.stock);
-    
-    if (!productId || isNaN(newStock)) {
-      return {
-        status: 'error',
-        message: 'Invalid parameters'
-      };
-    }
-    
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    const idIndex = headers.indexOf('id') || headers.indexOf('Id');
-    const stockIndex = headers.indexOf('stock') || headers.indexOf('Stock');
-    
-    if (idIndex === -1 || stockIndex === -1) {
-      return {
-        status: 'error',
-        message: 'Required columns not found'
-      };
-    }
-    
-    // Find product row
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][idIndex] === productId) {
-        sheet.getRange(i + 1, stockIndex + 1).setValue(newStock);
-        
-        if (CONFIG.DEBUG) {
-          Logger.log('Stock updated for product: ' + productId + ' to ' + newStock);
+    /**
+     * GSRCDN Security Class
+     */
+    class GSRCDNSecurity {
+        constructor(config = {}) {
+            this.config = {
+                scriptUrl: config.scriptUrl || '',
+                apiToken: config.apiToken || '',
+                hmacSecret: config.hmacSecret || '',
+                debug: config.debug || false
+            };
         }
         
-        return {
-          status: 'success',
-          message: 'Stock updated successfully',
-          productId: productId,
-          newStock: newStock
-        };
-      }
+        /**
+         * Configure the security module
+         * @param {Object} config - Configuration object
+         */
+        configure(config) {
+            this.config = { ...this.config, ...config };
+            if (this.config.debug) {
+                console.log('GSRCDN Security configured:', {
+                    scriptUrl: this.config.scriptUrl,
+                    hasToken: !!this.config.apiToken,
+                    hasSecret: !!this.config.hmacSecret,
+                    debug: this.config.debug
+                });
+            }
+        }
+        
+        /**
+         * Compute HMAC SHA256 hash
+         * Matches server-side implementation
+         * @param {string} params - Parameters string to hash
+         * @param {string} secret - Secret key for HMAC
+         * @returns {string} HMAC hash in hex format
+         */
+        computeHMAC(params, secret) {
+            if (typeof CryptoJS === 'undefined') {
+                throw new Error('CryptoJS is not available');
+            }
+            
+            try {
+                const hash = CryptoJS.HmacSHA256(params, secret);
+                const hexHash = hash.toString(CryptoJS.enc.Hex);
+                
+                if (this.config.debug) {
+                    console.log('computeHMAC:', {
+                        input: params,
+                        secret: secret.substring(0, 10) + '...',
+                        output: hexHash
+                    });
+                }
+                
+                return hexHash;
+            } catch (error) {
+                console.error('computeHMAC error:', error);
+                throw error;
+            }
+        }
+        
+        /**
+         * Create signature from parameters
+         * Matches server-side implementation exactly
+         * @param {Object} params - Parameters object
+         * @param {string} secret - Secret key for signature
+         * @returns {string} Signature hash
+         */
+        createSignature(params, secret) {
+            try {
+                // Sort keys alphabetically (critical for matching server)
+                const sortedKeys = Object.keys(params).sort();
+                
+                // Create signature string: key1=value1&key2=value2
+                const signatureString = sortedKeys
+                    .map(key => `${key}=${params[key]}`)
+                    .join('&');
+                
+                if (this.config.debug) {
+                    console.log('createSignature:', {
+                        params: params,
+                        sortedKeys: sortedKeys,
+                        signatureString: signatureString
+                    });
+                }
+                
+                // Compute HMAC
+                const signature = this.computeHMAC(signatureString, secret);
+                
+                if (this.config.debug) {
+                    console.log('createSignature result:', signature);
+                }
+                
+                return signature;
+            } catch (error) {
+                console.error('createSignature error:', error);
+                throw error;
+            }
+        }
+        
+        /**
+         * Make a secure request to the API
+         * @param {Object} params - Request parameters
+         * @param {Object} options - Additional options (optional)
+         * @returns {Promise<Object>} Response data
+         */
+        async makeSecureRequest(params, options = {}) {
+            try {
+                // Use instance config or provided config
+                const config = {
+                    scriptUrl: options.scriptUrl || this.config.scriptUrl,
+                    apiToken: options.apiToken || this.config.apiToken,
+                    hmacSecret: options.hmacSecret || this.config.hmacSecret,
+                    debug: options.debug !== undefined ? options.debug : this.config.debug
+                };
+                
+                // Validate configuration
+                if (!config.scriptUrl) {
+                    throw new Error('Script URL is required. Configure with gsrcdnSecurity.configure({scriptUrl: "..."})');
+                }
+                if (!config.apiToken) {
+                    throw new Error('API token is required. Configure with gsrcdnSecurity.configure({apiToken: "..."})');
+                }
+                if (!config.hmacSecret) {
+                    throw new Error('HMAC secret is required. Configure with gsrcdnSecurity.configure({hmacSecret: "..."})');
+                }
+                
+                // Create a copy of params to avoid mutation
+                const requestParams = { ...params };
+                
+                // Add required parameters
+                requestParams.token = config.apiToken;
+                requestParams.timestamp = Date.now().toString();
+                requestParams.referrer = window.location.origin;
+                requestParams.origin = window.location.origin;
+                
+                // Create signature (MUST be last, after all params are added)
+                requestParams.signature = this.createSignature(requestParams, config.hmacSecret);
+                
+                // Build URL with parameters
+                const url = new URL(config.scriptUrl);
+                Object.keys(requestParams).forEach(key => {
+                    url.searchParams.append(key, requestParams[key]);
+                });
+                
+                if (config.debug) {
+                    console.log('makeSecureRequest:', {
+                        url: url.toString(),
+                        params: requestParams,
+                        signature: requestParams.signature
+                    });
+                }
+                
+                // Make the request
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (config.debug) {
+                    console.log('makeSecureRequest response:', data);
+                }
+                
+                // Check if request was successful
+                if (data.status === 'success') {
+                    return data;
+                } else {
+                    throw new Error(data.message || 'Request failed');
+                }
+                
+            } catch (error) {
+                console.error('makeSecureRequest error:', error);
+                throw error;
+            }
+        }
+        
+        /**
+         * Validate response signature (if server returns one)
+         * @param {Object} response - Response object
+         * @param {string} secret - Secret key for validation (optional)
+         * @returns {boolean} True if signature is valid
+         */
+        validateResponse(response, secret) {
+            if (!response.signature) {
+                console.warn('GSRCDN: Response does not contain signature');
+                return false;
+            }
+            
+            const { signature, ...data } = response;
+            const calculatedSignature = this.createSignature(data, secret || this.config.hmacSecret);
+            
+            const isValid = signature === calculatedSignature;
+            
+            if (this.config.debug) {
+                console.log('validateResponse:', {
+                    received: signature,
+                    calculated: calculatedSignature,
+                    isValid: isValid
+                });
+            }
+            
+            return isValid;
+        }
+        
+        /**
+         * Get current configuration (without sensitive data)
+         * @returns {Object} Safe configuration object
+         */
+        getConfig() {
+            return {
+                scriptUrl: this.config.scriptUrl,
+                debug: this.config.debug,
+                hasToken: !!this.config.apiToken,
+                hasSecret: !!this.config.hmacSecret
+            };
+        }
     }
     
-    return {
-      status: 'error',
-      message: 'Product not found: ' + productId
+    // Create global instance
+    const gsrcdnSecurity = new GSRCDNSecurity();
+    
+    // Expose class and instance to window
+    window.GSRCDNSecurity = GSRCDNSecurity;
+    window.gsrcdnSecurity = gsrcdnSecurity;
+    
+    // ============================================
+    // Standalone Functions (Backward Compatibility)
+    // ============================================
+    
+    /**
+     * Standalone computeHMAC function
+     * @param {string} params - Parameters string to hash
+     * @param {string} secret - Secret key for HMAC
+     * @returns {string} HMAC hash
+     */
+    window.computeHMAC = function(params, secret) {
+        return gsrcdnSecurity.computeHMAC(params, secret);
     };
     
-  } catch (error) {
-    Logger.log('updateStock error: ' + error.toString());
-    return {
-      status: 'error',
-      message: error.toString()
+    /**
+     * Standalone createSignature function
+     * @param {Object} params - Parameters object
+     * @param {string} secret - Secret key for signature
+     * @returns {string} Signature hash
+     */
+    window.createSignature = function(params, secret) {
+        return gsrcdnSecurity.createSignature(params, secret);
     };
-  }
-}
-
-/**
- * Test function to verify HMAC computation
- */
-function testHMAC() {
-  const testParams = {
-    action: 'getData',
-    dataType: 'products',
-    timestamp: '1234567890',
-    token: 'test_token'
-  };
-  
-  const signature = createSignature(testParams, CONFIG.HMAC_SECRET);
-  
-  Logger.log('Test signature: ' + signature);
-  Logger.log('Test complete');
-}
+    
+    /**
+     * Standalone makeSecureRequest function
+     * @param {Object} params - Request parameters
+     * @param {Object} options - Additional options
+     * @returns {Promise<Object>} Response data
+     */
+    window.makeSecureRequest = async function(params, options) {
+        return await gsrcdnSecurity.makeSecureRequest(params, options);
+    };
+    
+    // Log initialization
+    if (typeof console !== 'undefined') {
+        console.log('%c GSRCDN Security Module v1.0.0 %c Loaded Successfully ', 
+            'background:#2563eb;color:#fff;padding:3px 0;', 
+            'background:#10b981;color:#fff;padding:3px 0;');
+        console.log('Available functions: computeHMAC, createSignature, makeSecureRequest');
+        console.log('Class instance: gsrcdnSecurity (use gsrcdnSecurity.configure({...}) to setup)');
+    }
+    
+})(window);
