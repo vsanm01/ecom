@@ -14,7 +14,7 @@
          * Render the welcome component
          * @param {string} containerId - ID of the container element
          * @param {Object} options - Configuration options
-         * @param {string} options.title - Custom title text (default: "Welcome to DBC  demo 101")
+         * @param {string} options.title - Custom title text (default: "Welcome to DBC 101")
          * @param {string} options.gradientStart - Start color of gradient (default: "#667eea")
          * @param {string} options.gradientEnd - End color of gradient (default: "#764ba2")
          * @param {string} options.titleColor - Title text color (default: "#4a5fc1")
@@ -29,7 +29,7 @@
 
             // Default options
             const config = {
-                title: options.title || 'Welcome to DBC  DEmo 101 ',
+                title: options.title || 'Welcome to DBC 101 ',
                 gradientStart: options.gradientStart || '#667eea',
                 gradientEnd: options.gradientEnd || '#764ba2',
                 titleColor: options.titleColor || '#4a5fc1',
