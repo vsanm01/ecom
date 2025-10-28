@@ -29,7 +29,7 @@
 
             // Default options
             const config = {
-                title: options.title || 'Welcome to DBC 101',
+                title: options.title || 'Welcome to DBC  DEmo 101 ',
                 gradientStart: options.gradientStart || '#667eea',
                 gradientEnd: options.gradientEnd || '#764ba2',
                 titleColor: options.titleColor || '#4a5fc1',
