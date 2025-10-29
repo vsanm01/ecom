@@ -106,29 +106,51 @@
         }
 
         /**
-         * Load messages from Google Sheets using GSRCDN
+         * Load messages from Google Sheets
          */
         async loadMessagesFromSheet() {
             this.log('Loading messages from Google Sheets...');
 
             try {
-                if (this.options.useGSRCDN && typeof GSRCDN !== 'undefined') {
-                    // Use your existing GSRCDN system
-                    const response = await GSRCDN.getData(this.options.sheetName);
-                    
-                    if (response && response.data && Array.isArray(response.data)) {
-                        this.messages = this.parseSheetData(response.data);
-                        this.log(`Loaded ${this.messages.length} messages from Sheet`);
-                    } else {
-                        throw new Error('Invalid response from GSRCDN');
-                    }
-                } else {
-                    // Fallback: Direct fetch (if you provide direct Sheet URL)
-                    this.log('GSRCDN not available, using fallback messages');
-                    this.messages = this.options.fallbackMessages;
+                // Get script URL from GSRCDN_CONFIG if available
+                const scriptUrl = (typeof GSRCDN_CONFIG !== 'undefined' && GSRCDN_CONFIG.scriptUrl) 
+                    ? GSRCDN_CONFIG.scriptUrl 
+                    : this.options.scriptUrl;
+
+                if (!scriptUrl) {
+                    throw new Error('No script URL provided. Set GSRCDN_CONFIG.scriptUrl or pass scriptUrl option.');
                 }
 
-                // Validate and filter messages
+                // Fetch messages from Google Sheets
+                const url = `${scriptUrl}?sheet=${this.options.sheetName}`;
+                this.log(`Fetching from: ${url}`);
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Check for API errors
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Parse response data
+                if (result.success && Array.isArray(result.data)) {
+                    this.messages = result.data;
+                    this.log(`Loaded ${this.messages.length} messages from Sheet (${result.count} active)`);
+                } else if (Array.isArray(result.data)) {
+                    // Fallback for older response format
+                    this.messages = result.data;
+                    this.log(`Loaded ${this.messages.length} messages from Sheet`);
+                } else {
+                    throw new Error('Invalid response format from API');
+                }
+
+                // Validate messages
                 this.messages = this.validateMessages(this.messages);
 
                 if (this.messages.length === 0) {
