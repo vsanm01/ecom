@@ -4,7 +4,7 @@
  * Version: 1.0.0
  * 
  * Google Sheet Structure:
- * Sheet Name: "Sheet5"
+ * Sheet Name: "sheet3"
  * 
  * Columns:
  * A: effect (rainbow, neon, disco, fire, matrix, marquee, gradient-flow, typewriter, flash-highlight, glow-pulse)
@@ -24,7 +24,7 @@
             this.options = {
                 // Google Sheets API Config (uses your existing GSRCDN_CONFIG)
                 useGSRCDN: options.useGSRCDN !== false,
-                sheetName: options.sheetName || 'Sheet5',
+                sheetName: options.sheetName || 'sheet3',
                 
                 // Selectors
                 containerSelector: options.containerSelector || '.scrolling-text',
@@ -397,7 +397,7 @@ scrollingText.init();
 
 // ADVANCED USAGE
 const scrollingText = new ScrollingTextManager({
-    sheetName: 'Sheet5',
+    sheetName: 'sheet3',
     changeInterval: 5000,
     randomOrder: true,
     enableLogging: true,
