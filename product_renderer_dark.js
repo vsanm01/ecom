@@ -307,7 +307,7 @@
                     }
                     
                     .pr-add-to-cart:hover {
-                        background: #218838;
+                        background: #ffd814;
                         transform: translateY(-1px);
                     }
                     
