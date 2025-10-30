@@ -290,8 +290,8 @@
                     .pr-add-to-cart {
                         width: 100%;
                         padding: 12px;
-                        background: #28a745;
-                        color: white;
+                        background: #ffd814;
+                        color: black;
                         border: none;
                         border-radius: 8px;
                         font-weight: 600;
@@ -641,7 +641,7 @@
                             ${product.originalPrice ? `<span class="pr-price-original">${this.config.currency}${product.originalPrice.toFixed(2)}</span>` : ''}
                         </div>
                         <button class="pr-add-to-cart" data-action="addToCart" data-product-id="${product.id}">
-                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                             Add to Cart
                         </button>
                     </div>
                 </div>
