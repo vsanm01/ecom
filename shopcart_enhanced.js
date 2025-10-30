@@ -617,14 +617,14 @@
                         <div class="quantity-controls">
                             <button class="quantity-btn" data-action="decrease" data-product-id="${item.id}" 
                                 ${displayQuantity <= 0 ? 'disabled' : ''}>
-                                <i class="fas fa-minus"></i>−
+                                <i class="fas fa-minus"></i>
                             </button>
                             <input type="number" class="quantity-input" value="${displayQuantity}" 
                                    min="0" ${stock !== undefined ? `max="${stock}"` : ''} 
                                    data-product-id="${item.id}">
                             <button class="quantity-btn" data-action="increase" data-product-id="${item.id}" 
                                 ${stock !== undefined && displayQuantity >= stock ? 'disabled' : ''}>
-                                <i class="fas fa-plus"></i>+
+                                <i class="fas fa-plus"></i>
                             </button>
                             ${hasUnsaved ? `
                                 <button class="save-qty-btn" data-product-id="${item.id}">Save</button>
