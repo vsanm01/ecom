@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Business Card</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card-wrapper {
+            max-width: 360px;
+            width: 100%;
+        }
+
+        .card-container {
+            background: white;
+            border: 3px solid #d1d5db;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        /* Digital Card Container */
+        .digital-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .banner-badge {
+            background: #9ca3af;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .company-badge {
+            background: #9ca3af;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .profile-image-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .profile-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #d1d5db;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .name-field {
+            font-size: 20px;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .job-title-field {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .contact-list {
+            margin-top: 16px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .contact-item:hover {
+            background: #f3f4f6;
+        }
+
+        .contact-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .icon-phone { background: #10b981; }
+        .icon-whatsapp { background: #25d366; }
+        .icon-location { background: #ef4444; }
+        .icon-email { background: #ef4444; }
+        .icon-website { background: #3b82f6; }
+
+        .contact-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .contact-text {
+            font-size: 14px;
+            color: #111827;
+            flex: 1;
+        }
+
+        .action-icons {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-icon-btn:hover {
+            background: #f3f4f6;
+            transform: scale(1.05);
+        }
+
+        .action-icon-btn svg {
+            width: 18px;
+            height: 18px;
+            color: #374151;
+        }
+
+        /* Social Media Container */
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .social-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            margin: 0 auto;
+        }
+
+        .social-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .social-icon svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .social-website { background: #3b82f6; }
+        .social-blog { background: #ff6b35; }
+        .social-facebook { background: #1877f2; }
+        .social-instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .social-youtube { background: #ff0000; }
+        .social-tiktok { background: #000000; }
+        .social-x { background: #000000; }
+        .social-pinterest { background: #bd081c; }
+        .social-linkedin { background: #0a66c2; }
+        .social-whatsapp { background: #25d366; }
+        .social-telegram { background: #26a5e4; }
+        .social-arattai { background: #ff6b00; }
+        .social-discord { background: #5865f2; }
+        .social-playstore { background: #34a853; }
+        .social-google-business { background: #4285f4; }
+        .social-wikipedia { background: #000000; }
+        .social-reddit { background: #ff4500; }
+        .social-quora { background: #b92b27; }
+
+        /* Action Container */
+        .action-grid {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .action-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .action-btn svg {
+            width: 24px;
+            height: 24px;
+            color: #374151;
+        }
+
+        .action-btn span {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #9ca3af;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 12px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .save-btn:hover {
+            background: #4f46e5;
+        }
+
+        .share-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .share-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            color: white;
+            text-decoration: none;
+        }
+
+        .share-option:hover {
+            transform: translateY(-2px);
+        }
+
+        .share-option svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .share-option span {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .qr-container {
+            text-align: center;
+        }
+
+        .qr-code {
+            width: 240px;
+            height: 240px;
+            margin: 0 auto 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            background: white;
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 480px) {
+            .card-wrapper {
+                max-width: 100%;
+            }
+            
+            .social-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card-wrapper">
+        <!-- Digital Card Container -->
+        <div class="card-container" id="digitalCardContainer">
+            <div class="digital-card-header">
+                <div class="banner-badge" id="bannerDisplay">Banner</div>
+                <div class="company-badge" id="companyDisplay">Company Name</div>
+            </div>
+
+            <div class="profile-section">
+                <div class="profile-image-wrapper">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='100' fill='%23e5e7eb'/%3E%3Cpath d='M100 110c-16.5 0-30-13.5-30-30s13.5-30 30-30 30 13.5 30 30-13.5 30-30 30zm0-50c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20z' fill='%239ca3af'/%3E%3Cpath d='M150 170c0-27.6-22.4-50-50-50s-50 22.4-50 50' fill='none' stroke='%239ca3af' stroke-width='10'/%3E%3C/svg%3E" 
+                         alt="Profile" 
+                         class="profile-image" 
+                         id="profileImage">
+                </div>
+
+                <div class="profile-info">
+                    <div class="name-field" id="nameDisplay">Name</div>
+                    <div class="job-title-field" id="jobTitleDisplay">Job Title</div>
+                </div>
+            </div>
+
+            <div class="contact-list">
+                <a href="#" class="contact-item" id="phoneItem" onclick="handleContact('phone', event)">
+                    <div class="contact-icon icon-phone">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-text" id="phoneDisplay">+91 9876543210</div>
+                </a>
+
+                <a href="#" class="contact-item" id="whatsappItem" onclick="handleContact('whatsapp', event)">
+                    <div class="contact-icon icon-whatsapp">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.570-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.891 3.488"/>
+                        </svg>
+                    </div>
+                    <div class="contact-text" id="whatsappDisplay">+91 9876543210</div>
+                </a>
+
+                <a href="#" class="contact-item" id="locationItem" onclick="handleContact('location', event)">
+                    <div class="contact-icon icon-location">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-text" id="locationDisplay">Location</div>
+                </a>
+
+                <a href="#" class="contact-item" id="emailItem" onclick="handleContact('email', event)">
+                    <div class="contact-icon icon-email">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-text" id="emailDisplay">email@company.com</div>
+                </a>
+
+                <a href="#" class="contact-item" id="websiteItem" onclick="handleContact('website', event)">
+                    <div class="contact-icon icon-website">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-text" id="websiteDisplay">www.company.com</div>
+                </a>
+            </div>
+
+            <div class="action-icons">
+                <button class="action-icon-btn" onclick="downloadDigitalCard()" title="Download">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Social Media Container -->
+        <div class="card-container">
+            <div class="social-grid">
+                <a href="https://www.example.com" class="social-icon social-website" id="websiteSocialLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                </a>
+
+                <a href="https://blog.example.com" class="social-icon social-blog" id="blogLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                </a>
+
+                <a href="https://facebook.com" class="social-icon social-facebook" id="facebookLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+
+                <a href="https://instagram.com" class="social-icon social-instagram" id="instagramLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                </a>
+
+                <a href="https://youtube.com" class="social-icon social-youtube" id="youtubeLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+
+                <a href="https://tiktok.com" class="social-icon social-tiktok" id="tiktokLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                    </svg>
+                </a>
+
+                <a href="https://x.com" class="social-icon social-x" id="xLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+
+                <a href="https://pinterest.com" class="social-icon social-pinterest" id="pinterestLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+                    </svg>
+                </a>
+
+                <a href="https://linkedin.com" class="social-icon social-linkedin" id="linkedinLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                </a>
+
+                <a href="https://wa.me/" class="social-icon social-whatsapp" id="whatsappSocialLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.570-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.891 3.488"/>
+                    </svg>
+                </a>
+
+                <a href="https://t.me/" class="social-icon social-telegram" id="telegramLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                </a>
+
+                <a href="#" class="social-icon social-arattai" id="arattaiLink">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
+                    </svg>
+                </a>
+
+                <a href="https://discord.com/" class="social-icon social-discord" id="discordLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
+                    </svg>
+                </a>
+
+                <a href="https://play.google.com/store" class="social-icon social-playstore" id="playstoreLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 0 1 0 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.802 8.99l-2.303 2.303-8.635-8.635z"/>
+                    </svg>
+                </a>
+
+                <a href="https://business.google.com" class="social-icon social-google-business" id="googleBusinessLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+                    </svg>
+                </a>
+
+                <a href="https://wikipedia.org" class="social-icon social-wikipedia" id="wikipediaLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.09 13.119c-.936 1.932-2.217 4.548-2.853 5.728-.616 1.074-1.127.931-1.532.029-1.406-3.321-4.293-9.144-5.651-12.409-.251-.601-.441-.987-.619-1.139-.181-.15-.554-.24-1.122-.271C.103 5.033 0 4.982 0 4.898v-.455l.052-.045c.924-.005 5.401 0 5.401 0l.051.045v.434c0 .119-.075.176-.225.176l-.564.031c-.485.029-.727.164-.727.436 0 .135.053.33.166.601 1.082 2.646 4.818 10.521 4.818 10.521l.136.046 2.411-4.81-.482-.93L9.747 7.715c-.289-.601-.537-.93-.716-1.021-.177-.09-.506-.149-1.021-.18-.524-.03-.555-.075-.555-.195v-.435l.061-.046c1.334-.03 4.096 0 4.096 0l.061.046v.436c0 .09-.075.15-.226.15l-.39.03c-.332.015-.66.135-.66.211 0 .06.03.135.09.226l1.588 3.326 1.033-2.126c.151-.315.226-.54.226-.661 0-.27-.376-.391-1.122-.435l-.391-.03c-.121 0-.166-.061-.166-.18v-.436l.061-.045c1.019-.031 3.691 0 3.691 0l.061.045v.435c0 .09-.075.166-.195.18-.99.074-1.814.18-2.415 1.005l-1.664 3.067 2.07 4.292 2.965-6.071c.135-.315.195-.556.195-.737 0-.24-.345-.391-1.006-.421l-.391-.029c-.135 0-.195-.061-.195-.166v-.45l.045-.045c.915-.014 3.631 0 3.631 0l.061.045v.435c0 .09-.075.166-.226.166-.631.06-1.035.226-1.438.601-.391.39-.691.989-1.051 1.62l-3.503 7.018c-.195.391-.345.586-.555.586-.195 0-.375-.226-.555-.616l-2.471-5.091z"/>
+                    </svg>
+                </a>
+
+                <a href="https://reddit.com" class="social-icon social-reddit" id="redditLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+                    </svg>
+                </a>
+
+                <a href="https://quora.com" class="social-icon social-quora" id="quoraLink" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.738 18.701c-.831 0-1.448-.521-1.765-1.137l-2.608 1.585c.924 1.598 2.654 2.657 4.373 2.657 2.955 0 5.262-2.323 5.262-6.017 0-3.662-2.307-6.017-5.262-6.017-2.939 0-5.262 2.355-5.262 6.017 0 .453.046.89.139 1.291l2.649-1.61c-.092-.263-.139-.543-.139-.844 0-1.621 1.078-2.921 2.477-2.921 1.384 0 2.477 1.3 2.477 2.921 0 1.668-1.093 2.968-2.477 2.968-.185 0-.369-.03-.539-.093zm6.278-11.407h4.984v17.414h-4.984zm-18.016 0h4.984v17.414h-4.984z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- Action Container -->
+        <div class="card-container">
+            <div class="action-grid">
+                <button class="action-btn" onclick="saveContact()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <span>Contact</span>
+                </button>
+
+                <button class="action-btn" onclick="showShareModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                    <span>Share</span>
+                </button>
+
+                <button class="action-btn" onclick="showQRModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span>QR Code</span>
+                </button>
+
+                <button class="action-btn" onclick="downloadBusinessCard()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                    <span>Business Card</span>
+                </button>
+
+                <button class="action-btn" onclick="editCard()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    <span>Edit</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Business Card</h2>
+                <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            
+            <form id="editForm">
+                <div class="form-group">
+                    <label class="form-label">Banner Text:</label>
+                    <input type="text" class="form-input" id="editBanner" placeholder="Banner">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Company Name:</label>
+                    <input type="text" class="form-input" id="editCompany" placeholder="Company Name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Profile Image URL:</label>
+                    <input type="url" class="form-input" id="editProfileImage" placeholder="https://example.com/profile.jpg">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Full Name:</label>
+                    <input type="text" class="form-input" id="editPersonName" placeholder="Your Full Name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Job Title:</label>
+                    <input type="text" class="form-input" id="editJobTitle" placeholder="Your Job Title">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Phone Number:</label>
+                    <input type="tel" class="form-input" id="editPhone" placeholder="+91 9876543210">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number:</label>
+                    <input type="tel" class="form-input" id="editWhatsApp" placeholder="+91 9876543210">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Location:</label>
+                    <input type="text" class="form-input" id="editLocation" placeholder="City, Country">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email:</label>
+                    <input type="email" class="form-input" id="editEmail" placeholder="email@company.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Website:</label>
+                    <input type="url" class="form-input" id="editWebsite" placeholder="https://www.company.com">
+                </div>
+
+                <h3 style="margin: 20px 0 15px; color: #111827; font-size: 16px;">Social Media Links</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Website URL:</label>
+                    <input type="url" class="form-input" id="editWebsiteSocial" placeholder="https://www.example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Blog URL:</label>
+                    <input type="url" class="form-input" id="editBlog" placeholder="https://blog.example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Facebook URL:</label>
+                    <input type="url" class="form-input" id="editFacebook" placeholder="https://facebook.com/profile">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Instagram URL:</label>
+                    <input type="url" class="form-input" id="editInstagram" placeholder="https://instagram.com/profile">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">YouTube URL:</label>
+                    <input type="url" class="form-input" id="editYouTube" placeholder="https://youtube.com/channel">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">TikTok URL:</label>
+                    <input type="url" class="form-input" id="editTikTok" placeholder="https://tiktok.com/@username">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">X (Twitter) URL:</label>
+                    <input type="url" class="form-input" id="editX" placeholder="https://x.com/profile">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Pinterest URL:</label>
+                    <input type="url" class="form-input" id="editPinterest" placeholder="https://pinterest.com/profile">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">LinkedIn URL:</label>
+                    <input type="url" class="form-input" id="editLinkedIn" placeholder="https://linkedin.com/in/profile">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Social URL:</label>
+                    <input type="url" class="form-input" id="editWhatsAppSocial" placeholder="https://wa.me/919876543210">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Telegram URL:</label>
+                    <input type="url" class="form-input" id="editTelegram" placeholder="https://t.me/username">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Arattai URL:</label>
+                    <input type="url" class="form-input" id="editArattai" placeholder="https://arattai.com/profile">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Discord URL:</label>
+                    <input type="url" class="form-input" id="editDiscord" placeholder="https://discord.gg/invite">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Play Store URL:</label>
+                    <input type="url" class="form-input" id="editPlayStore" placeholder="https://play.google.com/store/apps/details?id=">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Google Business URL:</label>
+                    <input type="url" class="form-input" id="editGoogleBusiness" placeholder="https://business.google.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Wikipedia URL:</label>
+                    <input type="url" class="form-input" id="editWikipedia" placeholder="https://wikipedia.org/wiki/">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Reddit URL:</label>
+                    <input type="url" class="form-input" id="editReddit" placeholder="https://reddit.com/u/username">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Quora URL:</label>
+                    <input type="url" class="form-input" id="editQuora" placeholder="https://quora.com/profile/username">
+                </div>
+                
+                <button type="button" class="save-btn" onclick="saveChanges()">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Share Digital Card</h3>
+                <button class="close-btn" onclick="closeModal('shareModal')">&times;</button>
+            </div>
+            
+            <div class="share-grid">
+                <a href="#" class="share-option social-whatsapp" onclick="shareViaWhatsApp(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.570-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.891 3.488"/>
+                    </svg>
+                    <span>WhatsApp</span>
+                </a>
+
+                <a href="#" class="share-option social-facebook" onclick="shareViaFacebook(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    <span>Facebook</span>
+                </a>
+
+                <a href="#" class="share-option social-x" onclick="shareViaX(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    <span>X</span>
+                </a>
+
+                <a href="#" class="share-option social-instagram" onclick="shareViaInstagram(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                    <span>Instagram</span>
+                </a>
+
+                <a href="#" class="share-option social-pinterest" onclick="shareViaPinterest(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+                    </svg>
+                    <span>Pinterest</span>
+                </a>
+
+                <a href="#" class="share-option" style="background: #34c759;" onclick="shareViaSMS(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                    </svg>
+                    <span>SMS</span>
+                </a>
+
+                <a href="#" class="share-option" style="background: #6b7280;" onclick="copyLink(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    <span>Copy Link</span>
+                </a>
+
+                <a href="#" class="share-option social-telegram" onclick="shareViaTelegram(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    <span>Telegram</span>
+                </a>
+
+                <a href="#" class="share-option" style="background: #0a66c2;" onclick="shareViaLinkedIn(); return false;">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    <span>LinkedIn</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">QR Code</h3>
+                <button class="close-btn" onclick="closeModal('qrModal')">&times;</button>
+            </div>
+            
+            <div class="qr-container">
+                <div class="qr-code" id="qrCodeContainer">
+                    <img src="" alt="QR Code" style="display: none;">
+                </div>
+                <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">Scan to view digital business card</p>
+                <button class="download-btn" onclick="downloadQR()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Card Data
+        let cardData = {
+            banner: 'Banner',
+            companyName: 'Company Name',
+            profileImage: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='100' fill='%23e5e7eb'/%3E%3Cpath d='M100 110c-16.5 0-30-13.5-30-30s13.5-30 30-30 30 13.5 30 30-13.5 30-30 30zm0-50c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20z' fill='%239ca3af'/%3E%3Cpath d='M150 170c0-27.6-22.4-50-50-50s-50 22.4-50 50' fill='none' stroke='%239ca3af' stroke-width='10'/%3E%3C/svg%3E",
+            name: 'Name',
+            jobTitle: 'Job Title',
+            phone: '+91 9876543210',
+            whatsapp: '+91 9876543210',
+            location: 'Location',
+            email: 'email@company.com',
+            website: 'www.company.com',
+            websiteSocial: 'https://www.example.com',
+            blog: 'https://blog.example.com',
+            facebook: 'https://facebook.com',
+            instagram: 'https://instagram.com',
+            youtube: 'https://youtube.com',
+            tiktok: 'https://tiktok.com',
+            x: 'https://x.com',
+            pinterest: 'https://pinterest.com',
+            linkedin: 'https://linkedin.com',
+            whatsappSocial: 'https://wa.me/',
+            telegram: 'https://t.me/',
+            arattai: '#',
+            discord: 'https://discord.com/',
+            playstore: 'https://play.google.com/store',
+            googleBusiness: 'https://business.google.com',
+            wikipedia: 'https://wikipedia.org',
+            reddit: 'https://reddit.com',
+            quora: 'https://quora.com'
+        };
+
+        // Initialize card display
+        function updateCardDisplay() {
+            document.getElementById('bannerDisplay').textContent = cardData.banner;
+            document.getElementById('companyDisplay').textContent = cardData.companyName;
+            document.getElementById('profileImage').src = cardData.profileImage;
+            document.getElementById('nameDisplay').textContent = cardData.name;
+            document.getElementById('jobTitleDisplay').textContent = cardData.jobTitle;
+            document.getElementById('phoneDisplay').textContent = cardData.phone;
+            document.getElementById('whatsappDisplay').textContent = cardData.whatsapp;
+            document.getElementById('locationDisplay').textContent = cardData.location;
+            document.getElementById('emailDisplay').textContent = cardData.email;
+            document.getElementById('websiteDisplay').textContent = cardData.website;
+
+            // Update social links
+            document.getElementById('websiteSocialLink').href = cardData.websiteSocial;
+            document.getElementById('blogLink').href = cardData.blog;
+            document.getElementById('facebookLink').href = cardData.facebook;
+            document.getElementById('instagramLink').href = cardData.instagram;
+            document.getElementById('youtubeLink').href = cardData.youtube;
+            document.getElementById('tiktokLink').href = cardData.tiktok;
+            document.getElementById('xLink').href = cardData.x;
+            document.getElementById('pinterestLink').href = cardData.pinterest;
+            document.getElementById('linkedinLink').href = cardData.linkedin;
+            document.getElementById('whatsappSocialLink').href = cardData.whatsappSocial;
+            document.getElementById('telegramLink').href = cardData.telegram;
+            document.getElementById('arattaiLink').href = cardData.arattai;
+            document.getElementById('discordLink').href = cardData.discord;
+            document.getElementById('playstoreLink').href = cardData.playstore;
+            document.getElementById('googleBusinessLink').href = cardData.googleBusiness;
+            document.getElementById('wikipediaLink').href = cardData.wikipedia;
+            document.getElementById('redditLink').href = cardData.reddit;
+            document.getElementById('quoraLink').href = cardData.quora;
+        }
+
+        // Edit Card
+        function editCard() {
+            // Populate form with current data
+            document.getElementById('editBanner').value = cardData.banner;
+            document.getElementById('editCompany').value = cardData.companyName;
+            document.getElementById('editProfileImage').value = cardData.profileImage;
+            document.getElementById('editPersonName').value = cardData.name;
+            document.getElementById('editJobTitle').value = cardData.jobTitle;
+            document.getElementById('editPhone').value = cardData.phone;
+            document.getElementById('editWhatsApp').value = cardData.whatsapp;
+            document.getElementById('editLocation').value = cardData.location;
+            document.getElementById('editEmail').value = cardData.email;
+            document.getElementById('editWebsite').value = cardData.website;
+            document.getElementById('editWebsiteSocial').value = cardData.websiteSocial;
+            document.getElementById('editBlog').value = cardData.blog;
+            document.getElementById('editFacebook').value = cardData.facebook;
+            document.getElementById('editInstagram').value = cardData.instagram;
+            document.getElementById('editYouTube').value = cardData.youtube;
+            document.getElementById('editTikTok').value = cardData.tiktok;
+            document.getElementById('editX').value = cardData.x;
+            document.getElementById('editPinterest').value = cardData.pinterest;
+            document.getElementById('editLinkedIn').value = cardData.linkedin;
+            document.getElementById('editWhatsAppSocial').value = cardData.whatsappSocial;
+            document.getElementById('editTelegram').value = cardData.telegram;
+            document.getElementById('editArattai').value = cardData.arattai;
+            document.getElementById('editDiscord').value = cardData.discord;
+            document.getElementById('editPlayStore').value = cardData.playstore;
+            document.getElementById('editGoogleBusiness').value = cardData.googleBusiness;
+            document.getElementById('editWikipedia').value = cardData.wikipedia;
+            document.getElementById('editReddit').value = cardData.reddit;
+            document.getElementById('editQuora').value = cardData.quora;
+
+            showModal('editModal');
+        }
+
+        // Save Changes
+        function saveChanges() {
+            cardData.banner = document.getElementById('editBanner').value || cardData.banner;
+            cardData.companyName = document.getElementById('editCompany').value || cardData.companyName;
+            cardData.profileImage = document.getElementById('editProfileImage').value || cardData.profileImage;
+            cardData.name = document.getElementById('editPersonName').value || cardData.name;
+            cardData.jobTitle = document.getElementById('editJobTitle').value || cardData.jobTitle;
+            cardData.phone = document.getElementById('editPhone').value || cardData.phone;
+            cardData.whatsapp = document.getElementById('editWhatsApp').value || cardData.whatsapp;
+            cardData.location = document.getElementById('editLocation').value || cardData.location;
+            cardData.email = document.getElementById('editEmail').value || cardData.email;
+            cardData.website = document.getElementById('editWebsite').value || cardData.website;
+            cardData.websiteSocial = document.getElementById('editWebsiteSocial').value || cardData.websiteSocial;
+            cardData.blog = document.getElementById('editBlog').value || cardData.blog;
+            cardData.facebook = document.getElementById('editFacebook').value || cardData.facebook;
+            cardData.instagram = document.getElementById('editInstagram').value || cardData.instagram;
+            cardData.youtube = document.getElementById('editYouTube').value || cardData.youtube;
+            cardData.tiktok = document.getElementById('editTikTok').value || cardData.tiktok;
+            cardData.x = document.getElementById('editX').value || cardData.x;
+            cardData.pinterest = document.getElementById('editPinterest').value || cardData.pinterest;
+            cardData.linkedin = document.getElementById('editLinkedIn').value || cardData.linkedin;
+            cardData.whatsappSocial = document.getElementById('editWhatsAppSocial').value || cardData.whatsappSocial;
+            cardData.telegram = document.getElementById('editTelegram').value || cardData.telegram;
+            cardData.arattai = document.getElementById('editArattai').value || cardData.arattai;
+            cardData.discord = document.getElementById('editDiscord').value || cardData.discord;
+            cardData.playstore = document.getElementById('editPlayStore').value || cardData.playstore;
+            cardData.googleBusiness = document.getElementById('editGoogleBusiness').value || cardData.googleBusiness;
+            cardData.wikipedia = document.getElementById('editWikipedia').value || cardData.wikipedia;
+            cardData.reddit = document.getElementById('editReddit').value || cardData.reddit;
+            cardData.quora = document.getElementById('editQuora').value || cardData.quora;
+
+            updateCardDisplay();
+            closeModal('editModal');
+            alert('Business card updated successfully!');
+        }
+
+        // Handle Contact Clicks
+        function handleContact(type, event) {
+            event.preventDefault();
+            
+            switch(type) {
+                case 'phone':
+                    window.location.href = `tel:${cardData.phone}`;
+                    break;
+                case 'whatsapp':
+                    const cleanNumber = cardData.whatsapp.replace(/[^\d]/g, '');
+                    window.open(`https://wa.me/${cleanNumber}`, '_blank');
+                    break;
+                case 'location':
+                    window.open(`https://maps.google.com/maps?q=${encodeURIComponent(cardData.location)}`, '_blank');
+                    break;
+                case 'email':
+                    window.location.href = `mailto:${cardData.email}`;
+                    break;
+                case 'website':
+                    let url = cardData.website;
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'https://' + url;
+                    }
+                    window.open(url, '_blank');
+                    break;
+            }
+        }
+
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        // Share Functions
+        function showShareModal() {
+            document.getElementById('shareModal').classList.add('active');
+        }
+
+        function shareViaWhatsApp() {
+            const message = `Check out my digital business card: ${window.location.href}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function shareViaFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+        }
+
+        function shareViaX() {
+            const message = `Check out ${cardData.name}'s digital business card: ${window.location.href}`;
+            window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function shareViaInstagram() {
+            copyLink();
+            alert('Link copied! You can now paste it in your Instagram story or bio.');
+        }
+
+        function shareViaPinterest() {
+            const url = encodeURIComponent(window.location.href);
+            const description = encodeURIComponent(`${cardData.name}'s Digital Business Card`);
+            window.open(`https://pinterest.com/pin/create/button/?url=${url}&description=${description}`, '_blank');
+        }
+
+        function shareViaSMS() {
+            const message = `Check out ${cardData.name}'s digital business card: ${window.location.href}`;
+            window.open(`sms:?body=${encodeURIComponent(message)}`);
+        }
+
+        function shareViaTelegram() {
+            const url = window.location.href;
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(cardData.name + "'s Digital Business Card")}`, '_blank');
+        }
+
+        function shareViaLinkedIn() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = window.location.href;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Link copied to clipboard!');
+            });
+        }
+
+        // QR Code Functions
+        function showQRModal() {
+            const modal = document.getElementById('qrModal');
+            const qrContainer = document.getElementById('qrCodeContainer');
+            const img = qrContainer.querySelector('img');
+            
+            const url = window.location.href;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&format=png&margin=20`;
+            
+            img.src = qrUrl;
+            img.style.display = 'block';
+            modal.classList.add('active');
+        }
+
+        function downloadQR() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 300;
+            canvas.height = 400;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 300, 400);
+
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 18px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(cardData.companyName, 150, 35);
+
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}&format=png&margin=10`;
+            
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                ctx.drawImage(img, 50, 60, 200, 200);
+                
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '13px -apple-system, sans-serif';
+                ctx.fillText('Scan to view digital card', 150, 285);
+
+                ctx.fillStyle = '#111827';
+                ctx.font = 'bold 15px -apple-system, sans-serif';
+                ctx.fillText(cardData.name, 150, 315);
+
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '12px -apple-system, sans-serif';
+                ctx.fillText(cardData.jobTitle, 150, 335);
+
+                const link = document.createElement('a');
+                link.download = `${cardData.name.replace(/\s+/g, '_')}_QR_Code.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            };
+            img.src = qrUrl;
+        }
+
+        // Save Contact (vCard)
+        function saveContact() {
+            const vCard = `BEGIN:VCARD
+VERSION:3.0
+FN:${cardData.name}
+ORG:${cardData.companyName}
+TITLE:${cardData.jobTitle}
+TEL:${cardData.phone}
+EMAIL:${cardData.email}
+URL:${cardData.website}
+ADR:;;${cardData.location};;;;
+END:VCARD`;
+
+            const blob = new Blob([vCard], { type: 'text/vcard' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${cardData.name.replace(/\s+/g, '_')}.vcf`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Download Digital Card
+        function downloadDigitalCard() {
+            const container = document.getElementById('digitalCardContainer');
+            const actionIcons = container.querySelector('.action-icons');
+            
+            // Hide action icons temporarily
+            actionIcons.style.display = 'none';
+            
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const scale = 2;
+            
+            canvas.width = 360 * scale;
+            canvas.height = 500 * scale;
+            ctx.scale(scale, scale);
+            
+            // Draw background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 360, 500);
+            
+            // Draw border
+            ctx.strokeStyle = '#d1d5db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            // Rounded rectangle
+            const radius = 24;
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(360 - radius, 0);
+            ctx.quadraticCurveTo(360, 0, 360, radius);
+            ctx.lineTo(360, 500 - radius);
+            ctx.quadraticCurveTo(360, 500, 360 - radius, 500);
+            ctx.lineTo(radius, 500);
+            ctx.quadraticCurveTo(0, 500, 0, 500 - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.stroke();
+            
+            // Draw badges
+            ctx.fillStyle = '#9ca3af';
+            ctx.beginPath();
+            ctx.roundRect(20, 20, 80, 28, 6);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '600 13px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(cardData.banner, 60, 38);
+            
+            ctx.fillStyle = '#9ca3af';
+            ctx.beginPath();
+            ctx.roundRect(260, 20, 80, 28, 6);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(cardData.companyName.substring(0, 10), 300, 38);
+            
+            // Profile section
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 20px -apple-system, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(cardData.name, 130, 100);
+            
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '14px -apple-system, sans-serif';
+            ctx.fillText(cardData.jobTitle, 130, 120);
+            
+            // Contact info
+            let yPos = 180;
+            ctx.font = '14px -apple-system, sans-serif';
+            ctx.fillStyle = '#111827';
+            
+            const contacts = [
+                cardData.phone,
+                cardData.whatsapp,
+                cardData.location,
+                cardData.email,
+                cardData.website
+            ];
+            
+            contacts.forEach(text => {
+                ctx.fillText(text, 80, yPos);
+                yPos += 35;
+            });
+            
+            // Restore action icons
+            actionIcons.style.display = 'flex';
+            
+            const link = document.createElement('a');
+            link.download = `${cardData.name.replace(/\s+/g, '_')}_Digital_Card.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        }
+
+        // Download Business Card (same as digital card)
+        function downloadBusinessCard() {
+            downloadDigitalCard();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCardDisplay();
+        });
+    </script>
+</body>
+</html>
