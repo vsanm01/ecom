@@ -231,7 +231,7 @@
             
             try {
                 // Fetch specific cell data
-                const url = `${this.scriptUrl}?sheet=${encodeURIComponent(sheetName)}&range=${encodeURIComponent(cellRange)}`;
+               const url = `${this.scriptUrl}?sheet=${encodeURIComponent(sheetName)}&type=modal&range=${encodeURIComponent(cellRange)}`;
                 const response = await fetch(url);
                 const data = await response.json();
                 
