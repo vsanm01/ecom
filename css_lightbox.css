@@ -1,0 +1,40 @@
+/* GLightbox Custom Styles */
+.gslide-image img {
+    max-width: 95vw !important;
+    max-height: 95vh !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+.gslide-media {
+    max-width: 95vw !important;
+    max-height: 95vh !important;
+}
+
+.glightbox-container .gslide-description {
+    background: rgba(0, 0, 0, 0.85) !important;
+    padding: 20px !important;
+    font-size: 18px !important;
+}
+
+.glightbox-container .gslide-title {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    margin-bottom: 10px !important;
+    color: white !important;
+}
+
+.gslide-inline,
+.gslide-external {
+    max-width: 95vw !important;
+    max-height: 95vh !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .gslide-image img {
+        max-width: 98vw !important;
+        max-height: 90vh !important;
+    }
+}
