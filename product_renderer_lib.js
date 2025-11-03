@@ -1,55 +1,52 @@
 /**
- * ProductRenderer - A reusable product grid rendering library
- * Version: 1.0.0
+ * Combined Product Library - Renderer + QuickView
+ * Version: 2.0.0 - Combined Edition
  * 
  * Usage:
  * <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
- * <script src="product-renderer.js"></script>
+ * <script src="product-library.js"></script>
  * 
+ * // Initialize renderer
  * ProductRenderer.init({
  *   containerId: 'productsGrid',
  *   products: yourProductsArray,
- *   wishlist: yourWishlistArray,
  *   currency: '₹',
  *   onAddToCart: (productId) => { ... },
- *   onQuickView: (productId) => { ... },
- *   onToggleWishlist: (productId) => { ... },
  *   onShare: (productId) => { ... }
  * });
- * 
  * ProductRenderer.render();
- * ProductRenderer.render(filteredProducts); // Render specific products
+ * 
+ * // Quick view is automatically integrated
+ * // Click the eye icon on any product card to see it in action
  */
 
 (function(window) {
     'use strict';
     
+    // ============================================
+    // PRODUCT RENDERER
+    // ============================================
     const ProductRenderer = {
         config: {
             containerId: 'productsGrid',
             products: [],
-            wishlist: [],
             currency: '$',
             showDiscount: true,
             showRating: true,
             enableQuickView: true,
-            enableWishlist: true,
             enableShare: true,
             enableLightbox: false,
             onAddToCart: null,
             onQuickView: null,
-            onToggleWishlist: null,
             onShare: null,
-            gridColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            onNotification: null,
+            gridColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             emptyMessage: 'No Products Found',
             emptyIcon: 'fas fa-inbox'
         },
         
         container: null,
         
-        /**
-         * Initialize the library with configuration
-         */
         init: function(options) {
             this.config = Object.assign({}, this.config, options);
             this.container = document.getElementById(this.config.containerId);
@@ -60,11 +57,24 @@
             }
             
             this.injectStyles();
+            
+            // Auto-initialize QuickView with shared config
+            ProductQuickView.init({
+                products: this.config.products,
+                currency: this.config.currency,
+                onAddToCart: this.config.onAddToCart,
+                onShare: this.config.onShare,
+                onNotification: this.config.onNotification
+            });
+            
+            // Set default onQuickView to use ProductQuickView
+            if (!this.config.onQuickView) {
+                this.config.onQuickView = (productId) => {
+                    ProductQuickView.show(productId);
+                };
+            }
         },
         
-        /**
-         * Inject required CSS styles
-         */
         injectStyles: function() {
             if (document.getElementById('pr-styles')) return;
             
@@ -72,9 +82,10 @@
                 <style id="pr-styles">
                     .pr-grid {
                         display: grid;
-                        grid-template-columns: ${this.config.gridColumns};
-                        gap: 30px;
+                        grid-template-columns: repeat(5, 1fr);
+                        gap: 20px;
                         width: 100%;
+                        margin-bottom: 40px;
                     }
                     
                     .pr-empty {
@@ -98,105 +109,107 @@
                     
                     .pr-card {
                         background: white;
-                        border-radius: 16px;
+                        border-radius: 12px;
                         overflow: hidden;
-                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                        transition: transform 0.3s, box-shadow 0.3s;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                        border: 1px solid #f1f3f4;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
                         position: relative;
                     }
                     
                     .pr-card:hover {
-                        transform: translateY(-8px);
-                        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+                        transform: translateY(-4px);
+                        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
                     }
                     
                     .pr-image-container {
                         position: relative;
                         width: 100%;
-                        height: 280px;
-                        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                        height: 220px;
+                        background: #f8f9fa;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         overflow: hidden;
+                        border-bottom: 1px solid #f1f3f4;
                     }
                     
                     .pr-image {
                         width: 100%;
                         height: 100%;
                         object-fit: cover;
-                        transition: transform 0.5s;
+                        transition: transform 0.3s ease;
                     }
                     
                     .pr-card:hover .pr-image {
-                        transform: scale(1.1);
+                        transform: scale(1.05);
                     }
                     
                     .pr-image-emoji {
-                        font-size: 80px;
+                        font-size: 48px;
                     }
                     
                     .pr-badge {
                         position: absolute;
                         top: 15px;
                         right: 15px;
-                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                        background: rgba(0, 0, 0, 0.50);
+                        backdrop-filter: blur(12px);
+                        -webkit-backdrop-filter: blur(12px);
                         color: white;
                         padding: 6px 12px;
                         border-radius: 20px;
                         font-weight: 700;
                         font-size: 12px;
-                        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        border: 1px solid rgba(0, 0, 0, 0.7);
                         z-index: 2;
+                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
                     }
                     
                     .pr-actions {
                         position: absolute;
-                        top: 15px;
+                        bottom: 15px;
                         left: 15px;
+                        right: 15px;
                         display: flex;
-                        flex-direction: column;
-                        gap: 10px;
+                        justify-content: space-between;
+                        align-items: center;
                         opacity: 0;
-                        transform: translateX(-20px);
+                        transform: translateY(10px);
                         transition: all 0.3s;
                         z-index: 2;
                     }
                     
                     .pr-card:hover .pr-actions {
                         opacity: 1;
-                        transform: translateX(0);
+                        transform: translateY(0);
                     }
                     
                     .pr-action-btn {
                         width: 40px;
                         height: 40px;
-                        border-radius: 50%;
-                        background: rgba(255, 255, 255, 0.95);
-                        border: none;
+                        border-radius: 20px;
+                        background: rgba(0, 0, 0, 0.50);
+                        backdrop-filter: blur(12px);
+                        -webkit-backdrop-filter: blur(12px);
+                        border: 1px solid rgba(0, 0, 0, 0.7);
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         cursor: pointer;
                         transition: all 0.3s;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                        color: #4b5563;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        color: white;
                         font-size: 16px;
+                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
                     }
                     
                     .pr-action-btn:hover {
                         transform: scale(1.1);
-                        background: white;
-                        color: #6366f1;
-                    }
-                    
-                    .pr-action-btn.pr-wishlist-active {
-                        background: #fef2f2;
-                        color: #ef4444;
-                    }
-                    
-                    .pr-action-btn.pr-wishlist-active:hover {
-                        background: #fee2e2;
+                        background: rgba(0, 0, 0, 0.65);
+                        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
                     }
                     
                     .pr-info {
@@ -204,19 +217,29 @@
                     }
                     
                     .pr-category {
-                        color: #6366f1;
+                        display: inline-block;
+                        color: #0066cc;
+                        padding: 0;
+                        border: none;
+                        background: transparent;
                         font-size: 12px;
-                        font-weight: 700;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                        margin-bottom: 8px;
+                        font-weight: 500;
+                        margin-bottom: 16px;
+                        text-transform: capitalize;
+                        cursor: pointer;
+                        text-decoration: underline;
+                        transition: color 0.3s;
+                    }
+                    
+                    .pr-category:hover {
+                        color: #004499;
                     }
                     
                     .pr-title {
                         font-size: 18px;
-                        font-weight: 700;
-                        color: #111827;
-                        margin: 0 0 12px 0;
+                        font-weight: 600;
+                        color: #212529;
+                        margin: 0 0 8px 0;
                         line-height: 1.4;
                         display: -webkit-box;
                         -webkit-line-clamp: 2;
@@ -244,14 +267,18 @@
                     .pr-price {
                         display: flex;
                         align-items: center;
-                        gap: 10px;
-                        margin-bottom: 15px;
+                        gap: 4px;
+                        margin-bottom: 16px;
                     }
                     
                     .pr-price-current {
                         font-size: 24px;
                         font-weight: 700;
-                        color: #10b981;
+                        color: #495057;
+                    }
+                    
+                    .pr-price-current .pr-currency {
+                        font-size: 20px;
                     }
                     
                     .pr-price-original {
@@ -262,13 +289,15 @@
                     
                     .pr-add-to-cart {
                         width: 100%;
-                        padding: 14px;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white;
+                        padding: 12px;
+                        background: #ffd814;
+                        color: black;
                         border: none;
-                        border-radius: 10px;
+                        border-radius: 8px;
                         font-weight: 600;
-                        font-size: 15px;
+                        font-size: 16px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
                         cursor: pointer;
                         display: flex;
                         align-items: center;
@@ -278,40 +307,52 @@
                     }
                     
                     .pr-add-to-cart:hover {
-                        transform: translateY(-2px);
-                        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+                        background: #f7ca00;
+                        transform: translateY(-1px);
                     }
                     
                     .pr-add-to-cart:active {
                         transform: translateY(0);
                     }
                     
+                    @media (min-width: 1200px) {
+                        .pr-grid { grid-template-columns: repeat(5, 1fr); gap: 20px; }
+                    }
+                    
+                    @media (min-width: 992px) and (max-width: 1199px) {
+                        .pr-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+                    }
+                    
+                    @media (min-width: 769px) and (max-width: 991px) {
+                        .pr-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+                    }
+                    
                     @media (max-width: 768px) {
-                        .pr-grid {
-                            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                            gap: 15px;
-                        }
-                        
-                        .pr-image-container {
-                            height: 200px;
-                        }
-                        
-                        .pr-info {
-                            padding: 15px;
-                        }
-                        
-                        .pr-title {
-                            font-size: 16px;
-                        }
-                        
-                        .pr-price-current {
-                            font-size: 20px;
-                        }
-                        
-                        .pr-actions {
-                            opacity: 1;
-                            transform: translateX(0);
-                        }
+                        .pr-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+                        .pr-image-container { height: 140px; }
+                        .pr-image-emoji { font-size: 32px; }
+                        .pr-badge { top: 8px; right: 8px; padding: 4px 10px; border-radius: 14px; font-size: 10px; }
+                        .pr-actions { opacity: 1; transform: translateY(0); bottom: 8px; left: 8px; right: 8px; }
+                        .pr-action-btn { width: 32px; height: 32px; font-size: 13px; }
+                        .pr-info { padding: 12px; }
+                        .pr-category { font-size: 10px; margin-bottom: 10px; }
+                        .pr-title { font-size: 14px; margin-bottom: 5px; }
+                        .pr-price { margin-bottom: 10px; }
+                        .pr-price-current { font-size: 18px; }
+                        .pr-price-current .pr-currency { font-size: 16px; }
+                        .pr-add-to-cart { padding: 8px; font-size: 12px; }
+                    }
+                    
+                    @media (max-width: 480px) {
+                        .pr-grid { gap: 12px; }
+                        .pr-image-container { height: 120px; }
+                        .pr-image-emoji { font-size: 28px; }
+                        .pr-badge { top: 6px; right: 6px; padding: 3px 8px; font-size: 9px; }
+                        .pr-actions { bottom: 6px; left: 6px; right: 6px; }
+                        .pr-action-btn { width: 30px; height: 30px; font-size: 12px; }
+                        .pr-info { padding: 10px; }
+                        .pr-title { font-size: 13px; }
+                        .pr-price-current { font-size: 16px; }
                     }
                 </style>
             `;
@@ -319,9 +360,6 @@
             document.head.insertAdjacentHTML('beforeend', styles);
         },
         
-        /**
-         * Check if URL is valid
-         */
         isValidURL: function(string) {
             try {
                 new URL(string);
@@ -331,9 +369,6 @@
             }
         },
         
-        /**
-         * Generate star rating HTML
-         */
         generateStars: function(rating) {
             let stars = '';
             const fullStars = Math.floor(rating);
@@ -355,9 +390,6 @@
             return stars;
         },
         
-        /**
-         * Generate image content HTML
-         */
         generateImageContent: function(product) {
             if (product.image && this.isValidURL(product.image)) {
                 return `
@@ -376,11 +408,18 @@
             }
         },
         
-        /**
-         * Generate action buttons HTML
-         */
-        generateActions: function(product, isInWishlist) {
-            let actions = '';
+        generateActions: function(product) {
+            let actions = '<div class="pr-actions">';
+            
+            if (this.config.enableShare) {
+                actions += `
+                    <button class="pr-action-btn" data-action="share" data-product-id="${product.id}" title="Share">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                `;
+            } else {
+                actions += '<div></div>';
+            }
             
             if (this.config.enableQuickView) {
                 actions += `
@@ -390,38 +429,19 @@
                 `;
             }
             
-            if (this.config.enableWishlist) {
-                actions += `
-                    <button class="pr-action-btn ${isInWishlist ? 'pr-wishlist-active' : ''}" data-action="toggleWishlist" data-product-id="${product.id}" title="Add to Wishlist">
-                        <i class="fas fa-heart"></i>
-                    </button>
-                `;
-            }
-            
-            if (this.config.enableShare) {
-                actions += `
-                    <button class="pr-action-btn" data-action="share" data-product-id="${product.id}" title="Share">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
-                `;
-            }
-            
-            return actions ? `<div class="pr-actions">${actions}</div>` : '';
+            actions += '</div>';
+            return actions;
         },
         
-        /**
-         * Generate product card HTML
-         */
         generateCard: function(product) {
             if (!product.title || !product.price) return '';
             
-            const isInWishlist = this.config.wishlist.some(item => item.id === product.id);
             const discount = this.config.showDiscount && product.originalPrice 
                 ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
                 : 0;
             
             const imageContent = this.generateImageContent(product);
-            const actions = this.generateActions(product, isInWishlist);
+            const actions = this.generateActions(product);
             
             return `
                 <div class="pr-card" data-product-id="${product.id}" data-category="${product.category || ''}" data-price="${product.price}">
@@ -440,20 +460,17 @@
                             </div>
                         ` : ''}
                         <div class="pr-price">
-                            <span class="pr-price-current">${this.config.currency}${product.price.toFixed(2)}</span>
+                            <span class="pr-price-current"><span class="pr-currency">${this.config.currency}</span>${product.price.toFixed(2)}</span>
                             ${product.originalPrice ? `<span class="pr-price-original">${this.config.currency}${product.originalPrice.toFixed(2)}</span>` : ''}
                         </div>
                         <button class="pr-add-to-cart" data-action="addToCart" data-product-id="${product.id}">
-                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                             Add to Cart
                         </button>
                     </div>
                 </div>
             `;
         },
         
-        /**
-         * Generate empty state HTML
-         */
         generateEmptyState: function() {
             return `
                 <div class="pr-empty">
@@ -465,9 +482,6 @@
             `;
         },
         
-        /**
-         * Attach event listeners to action buttons
-         */
         attachEventListeners: function() {
             const buttons = this.container.querySelectorAll('[data-action]');
             
@@ -488,12 +502,6 @@
                                 this.config.onQuickView(productId);
                             }
                             break;
-                        case 'toggleWishlist':
-                            if (this.config.onToggleWishlist) {
-                                this.config.onToggleWishlist(productId);
-                                e.currentTarget.classList.toggle('pr-wishlist-active');
-                            }
-                            break;
                         case 'share':
                             if (this.config.onShare) {
                                 this.config.onShare(productId);
@@ -504,33 +512,24 @@
             });
         },
         
-        /**
-         * Render products to the container
-         */
         render: function(productsToRender) {
             if (!this.container) {
                 console.error('Container not initialized. Call init() first.');
                 return;
             }
             
-            // Use provided products or default to config products
             const products = productsToRender || this.config.products;
-            
-            // Clear container
             this.container.innerHTML = '';
             
-            // Add grid class
             if (!this.container.classList.contains('pr-grid')) {
                 this.container.classList.add('pr-grid');
             }
             
-            // Check if products exist
             if (!products || products.length === 0) {
                 this.container.innerHTML = this.generateEmptyState();
                 return;
             }
             
-            // Generate and append product cards
             products.forEach(product => {
                 const cardHTML = this.generateCard(product);
                 if (cardHTML) {
@@ -538,27 +537,14 @@
                 }
             });
             
-            // Attach event listeners
             this.attachEventListeners();
         },
         
-        /**
-         * Update products array
-         */
         updateProducts: function(products) {
             this.config.products = products;
+            ProductQuickView.updateProducts(products);
         },
         
-        /**
-         * Update wishlist array
-         */
-        updateWishlist: function(wishlist) {
-            this.config.wishlist = wishlist;
-        },
-        
-        /**
-         * Filter products by category
-         */
         filterByCategory: function(category) {
             if (!category || category === 'all') {
                 return this.config.products;
@@ -566,16 +552,10 @@
             return this.config.products.filter(p => p.category === category);
         },
         
-        /**
-         * Filter products by price range
-         */
         filterByPrice: function(min, max) {
             return this.config.products.filter(p => p.price >= min && p.price <= max);
         },
         
-        /**
-         * Search products by text
-         */
         search: function(query) {
             const lowerQuery = query.toLowerCase();
             return this.config.products.filter(p => 
@@ -585,9 +565,6 @@
             );
         },
         
-        /**
-         * Sort products
-         */
         sort: function(products, sortBy) {
             const sorted = [...products];
             
@@ -608,7 +585,497 @@
         }
     };
     
+    // ============================================
+    // PRODUCT QUICK VIEW
+    // ============================================
+    const ProductQuickView = {
+        config: {
+            products: [],
+            currency: '$',
+            onAddToCart: null,
+            onShare: null,
+            onNotification: null,
+            lightboxEnabled: true
+        },
+        
+        init: function(options) {
+            this.config = Object.assign({}, this.config, options);
+            this.injectStyles();
+            this.injectModal();
+            this.attachEventListeners();
+        },
+        
+        injectStyles: function() {
+            if (document.getElementById('pqv-styles')) return;
+            
+            const styles = `
+                <style id="pqv-styles">
+                    .pqv-modal {
+                        display: none;
+                        position: fixed;
+                        z-index: 10000;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        backdrop-filter: blur(5px);
+                        animation: pqv-fadeIn 0.3s ease;
+                    }
+                    
+                    .pqv-modal.show {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    
+                    .pqv-modal-dialog {
+                        background: white;
+                        border-radius: 16px;
+                        max-width: 900px;
+                        width: 90%;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                        animation: pqv-slideUp 0.3s ease;
+                    }
+                    
+                    .pqv-modal-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 20px 30px;
+                        border-bottom: 1px solid #e5e7eb;
+                    }
+                    
+                    .pqv-modal-title {
+                        font-size: 24px;
+                        font-weight: 700;
+                        color: #111827;
+                        margin: 0;
+                    }
+                    
+                    .pqv-close {
+                        background: none;
+                        border: none;
+                        font-size: 28px;
+                        cursor: pointer;
+                        color: #6b7280;
+                        padding: 0;
+                        width: 32px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 8px;
+                        transition: all 0.2s;
+                    }
+                    
+                    .pqv-close:hover {
+                        background: #f3f4f6;
+                        color: #111827;
+                    }
+                    
+                    .pqv-modal-body {
+                        padding: 30px;
+                    }
+                    
+                    .pqv-content {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 40px;
+                    }
+                    
+                    .pqv-image {
+                        text-align: center;
+                        background: #f9fafb;
+                        border-radius: 12px;
+                        padding: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 300px;
+                    }
+                    
+                    .pqv-image img {
+                        max-width: 100%;
+                        height: auto;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: transform 0.3s;
+                    }
+                    
+                    .pqv-image img:hover {
+                        transform: scale(1.05);
+                    }
+                    
+                    .pqv-image-emoji {
+                        font-size: 120px;
+                    }
+                    
+                    .pqv-info {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 15px;
+                    }
+                    
+                    .pqv-category {
+                        color: #6366f1;
+                        font-weight: 600;
+                        font-size: 14px;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+                    
+                    .pqv-title {
+                        font-size: 28px;
+                        font-weight: 700;
+                        color: #111827;
+                        margin: 0;
+                        line-height: 1.3;
+                    }
+                    
+                    .pqv-rating {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    
+                    .pqv-stars {
+                        color: #fbbf24;
+                        font-size: 16px;
+                    }
+                    
+                    .pqv-rating-count {
+                        color: #6b7280;
+                        font-size: 14px;
+                    }
+                    
+                    .pqv-price {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        flex-wrap: wrap;
+                    }
+                    
+                    .pqv-price-current {
+                        font-size: 32px;
+                        font-weight: 700;
+                        color: #10b981;
+                    }
+                    
+                    .pqv-price-original {
+                        font-size: 20px;
+                        color: #9ca3af;
+                        text-decoration: line-through;
+                    }
+                    
+                    .pqv-discount-badge {
+                        background: #fef3c7;
+                        color: #d97706;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        font-size: 14px;
+                    }
+                    
+                    .pqv-description {
+                        color: #4b5563;
+                        line-height: 1.6;
+                        font-size: 15px;
+                    }
+                    
+                    .pqv-stock {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-weight: 600;
+                        font-size: 15px;
+                    }
+                    
+                    .pqv-stock.in-stock { color: #10b981; }
+                    .pqv-stock.low-stock { color: #f59e0b; }
+                    .pqv-stock.out-stock { color: #ef4444; }
+                    
+                    .pqv-actions {
+                        display: flex;
+                        gap: 12px;
+                        margin-top: 10px;
+                    }
+                    
+                    .pqv-btn {
+                        padding: 15px 30px;
+                        border: none;
+                        border-radius: 10px;
+                        font-weight: 600;
+                        font-size: 16px;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                    }
+                    
+                    .pqv-btn-primary {
+                        background: #ffd814;
+                        color: #000;
+                        flex: 1;
+                    }
+                    
+                    .pqv-btn-primary:hover {
+                        background: #f7ca00;
+                        transform: translateY(-2px);
+                        box-shadow: 0 10px 25px rgba(255, 216, 20, 0.4);
+                    }
+                    
+                    .pqv-btn-icon {
+                        background: #f3f4f6;
+                        color: #4b5563;
+                        padding: 15px 20px;
+                        font-size: 18px;
+                    }
+                    
+                    .pqv-btn-icon:hover {
+                        background: #e5e7eb;
+                        color: #111827;
+                    }
+                    
+                    @keyframes pqv-fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    
+                    @keyframes pqv-slideUp {
+                        from {
+                            opacity: 0;
+                            transform: translateY(30px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                    
+                    @media (max-width: 768px) {
+                        .pqv-content {
+                            grid-template-columns: 1fr;
+                            gap: 20px;
+                        }
+                        
+                        .pqv-modal-dialog {
+                            width: 95%;
+                            margin: 20px;
+                        }
+                        
+                        .pqv-title {
+                            font-size: 22px;
+                        }
+                        
+                        .pqv-price-current {
+                            font-size: 26px;
+                        }
+                        
+                        .pqv-actions {
+                            flex-wrap: wrap;
+                        }
+                        
+                        .pqv-btn-primary {
+                            flex: 1 1 100%;
+                        }
+                    }
+                </style>
+            `;
+            
+            document.head.insertAdjacentHTML('beforeend', styles);
+        },
+        
+        injectModal: function() {
+            if (document.getElementById('pqv-modal')) return;
+            
+            const modal = `
+                <div id="pqv-modal" class="pqv-modal">
+                    <div class="pqv-modal-dialog">
+                        <div class="pqv-modal-header">
+                            <h3 class="pqv-modal-title">Quick View</h3>
+                            <button class="pqv-close" onclick="ProductQuickView.close()">&times;</button>
+                        </div>
+                        <div class="pqv-modal-body" id="pqv-body"></div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modal);
+        },
+        
+        attachEventListeners: function() {
+            const modal = document.getElementById('pqv-modal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        this.close();
+                    }
+                });
+            }
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.close();
+                }
+            });
+        },
+        
+        isValidURL: function(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        },
+        
+        generateStars: function(rating) {
+            let stars = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 !== 0;
+            
+            for (let i = 0; i < fullStars; i++) {
+                stars += '<i class="fas fa-star"></i>';
+            }
+            
+            if (hasHalfStar) {
+                stars += '<i class="fas fa-star-half-alt"></i>';
+            }
+            
+            const emptyStars = 5 - Math.ceil(rating);
+            for (let i = 0; i < emptyStars; i++) {
+                stars += '<i class="far fa-star"></i>';
+            }
+            
+            return stars;
+        },
+        
+        showNotification: function(type, message) {
+            if (this.config.onNotification) {
+                this.config.onNotification(type, message);
+            } else {
+                alert(message);
+            }
+        },
+        
+        show: function(productId) {
+            const product = this.config.products.find(p => p.id === productId);
+            
+            if (!product) {
+                this.showNotification('error', 'Product not found');
+                return;
+            }
+            
+            const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+            
+            let imageContent;
+            if (product.image && this.isValidURL(product.image)) {
+                imageContent = `<img src="${product.image}" alt="${product.title}" />`;
+            } else if (product.image && product.image.trim() !== '') {
+                imageContent = `<div class="pqv-image-emoji">${product.image}</div>`;
+            } else {
+                imageContent = '<div class="pqv-image-emoji">🛒</div>';
+            }
+            
+            let stockClass = 'out-stock';
+            let stockText = 'Out of Stock';
+            if (product.stock > 10) {
+                stockClass = 'in-stock';
+                stockText = 'In Stock';
+            } else if (product.stock > 0) {
+                stockClass = 'low-stock';
+                stockText = `Only ${product.stock} left!`;
+            }
+            
+            const modalContent = `
+                <div class="pqv-content">
+                    <div class="pqv-image">
+                        ${imageContent}
+                    </div>
+                    <div class="pqv-info">
+                        <div class="pqv-category">${product.category}</div>
+                        <h2 class="pqv-title">${product.title}</h2>
+                        <div class="pqv-rating">
+                            <div class="pqv-stars">${this.generateStars(product.rating)}</div>
+                            <span class="pqv-rating-count">(${product.reviews} reviews)</span>
+                        </div>
+                        <div class="pqv-price">
+                            <span class="pqv-price-current">${this.config.currency}${product.price.toFixed(2)}</span>
+                            <span class="pqv-price-original">${this.config.currency}${product.originalPrice.toFixed(2)}</span>
+                            <span class="pqv-discount-badge">SAVE ${discount}%</span>
+                        </div>
+                        <div class="pqv-description">
+                            <p>${product.description || 'Experience premium quality with this exceptional product. Crafted with attention to detail and designed for your satisfaction.'}</p>
+                        </div>
+                        <div class="pqv-stock ${stockClass}">
+                            <i class="fas fa-box"></i>
+                            <span>${stockText}</span>
+                        </div>
+                        <div class="pqv-actions">
+                            <button class="pqv-btn pqv-btn-primary" data-action="addToCart" data-product-id="${product.id}">
+                                <i class="fas fa-shopping-cart"></i>
+                                Add to Cart
+                            </button>
+                            <button class="pqv-btn pqv-btn-icon" data-action="share" data-product-id="${product.id}">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const body = document.getElementById('pqv-body');
+            body.innerHTML = modalContent;
+            
+            this.attachActionListeners();
+            
+            const modal = document.getElementById('pqv-modal');
+            modal.classList.add('show');
+        },
+        
+        attachActionListeners: function() {
+            const buttons = document.querySelectorAll('[data-action]');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const action = e.currentTarget.dataset.action;
+                    const productId = e.currentTarget.dataset.productId;
+                    
+                    switch(action) {
+                        case 'addToCart':
+                            if (this.config.onAddToCart) {
+                                this.config.onAddToCart(productId);
+                                this.close();
+                            }
+                            break;
+                        case 'share':
+                            if (this.config.onShare) {
+                                this.config.onShare(productId);
+                            }
+                            break;
+                    }
+                });
+            });
+        },
+        
+        close: function() {
+            const modal = document.getElementById('pqv-modal');
+            modal.classList.remove('show');
+        },
+        
+        updateProducts: function(products) {
+            this.config.products = products;
+        }
+    };
+    
     // Expose to global scope
     window.ProductRenderer = ProductRenderer;
+    window.ProductQuickView = ProductQuickView;
     
 })(window);
+                        
