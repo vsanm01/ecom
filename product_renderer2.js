@@ -1,17 +1,24 @@
 /**
- * ProductRenderer - Enhanced with Built-in Cart Management
- * Version: 2.1.0 - Fixed Layout, Colors & Button Positions
+ * ProductRenderer - A reusable product grid rendering library
+ * Version: 1.5.0 - Updated with repositioned buttons
  * 
- * Features:
- * - Built-in cart management with +/- controls and manual input
- * - Quick View (top-right) & Share (bottom-left) toggle buttons
- * - Amazon-style yellow buttons (#ffd814)
- * - Category as clickable link
- * - Fixed button sizes, padding, and gaps
- * - Touch-friendly mobile controls
- * 
- * CDN Usage:
+ * Usage:
  * <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+ * <script src="product-renderer.js"></script>
+ * 
+ * ProductRenderer.init({
+ *   containerId: 'productsGrid',
+ *   products: yourProductsArray,
+ *   currency: '₹',
+ *   onAddToCart: (productId) => { ... },
+ *   onQuickView: (productId) => { ... },
+ *   onShare: (productId) => { ... }
+ * });
+ * 
+ * Note: Wishlist functionality has been completely removed from this version.
+ * 
+ * ProductRenderer.render();
+ * ProductRenderer.render(filteredProducts); // Render specific products
  */
 
 (function(window) {
@@ -21,16 +28,15 @@
         config: {
             containerId: 'productsGrid',
             products: [],
-            cart: [],
             currency: '$',
             showDiscount: true,
             showRating: true,
             enableQuickView: true,
             enableShare: true,
+            enableLightbox: false,
+            onAddToCart: null,
             onQuickView: null,
             onShare: null,
-            onCartUpdate: null,
-            onCategoryClick: null,
             gridColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             emptyMessage: 'No Products Found',
             emptyIcon: 'fas fa-inbox'
@@ -38,6 +44,9 @@
         
         container: null,
         
+        /**
+         * Initialize the library with configuration
+         */
         init: function(options) {
             this.config = Object.assign({}, this.config, options);
             this.container = document.getElementById(this.config.containerId);
@@ -48,46 +57,11 @@
             }
             
             this.injectStyles();
-            this.createSafetyMessage();
         },
         
-        createSafetyMessage: function() {
-            if (document.getElementById('pr-safety-message')) return;
-            
-            const messageHTML = `
-                <div id="pr-safety-message" class="pr-safety-message">
-                    <div class="pr-spinner"></div>
-                    <div class="pr-safety-text">Please save your quantity changes before proceeding!</div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', messageHTML);
-        },
-        
-        showSafetyMessage: function(productName) {
-            const messageEl = document.getElementById('pr-safety-message');
-            const textEl = messageEl.querySelector('.pr-safety-text');
-            
-            textEl.textContent = `Please save "${productName}" quantity!`;
-            messageEl.style.display = 'block';
-            
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, 3000);
-        },
-        
-        hasUnsavedChanges: function() {
-            const qtyControls = document.querySelectorAll('.pr-qty-controls');
-            for (let control of qtyControls) {
-                if (control.style.display === 'flex') {
-                    const productId = control.dataset.productId;
-                    const product = this.config.products.find(p => p.id === productId);
-                    return product ? product.title : true;
-                }
-            }
-            return false;
-        },
-        
+        /**
+         * Inject required CSS styles
+         */
         injectStyles: function() {
             if (document.getElementById('pr-styles')) return;
             
@@ -163,7 +137,7 @@
                         font-size: 48px;
                     }
                     
-                    /* BADGE - TOP RIGHT */
+                    /* UNIFIED BADGE STYLING - DARK TRANSPARENT BACKDROP */
                     .pr-badge {
                         position: absolute;
                         top: 15px;
@@ -182,53 +156,30 @@
                         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
                     }
                     
-                    /* QUICK VIEW - TOP RIGHT (TOGGLE ON HOVER) */
-                    .pr-quick-view-btn {
-                        position: absolute;
-                        top: 15px;
-                        right: 15px;
-                        width: 44px;
-                        height: 44px;
-                        border-radius: 22px;
-                        background: rgba(0, 0, 0, 0.50);
-                        backdrop-filter: blur(12px);
-                        -webkit-backdrop-filter: blur(12px);
-                        border: 1px solid rgba(0, 0, 0, 0.7);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                        color: white;
-                        font-size: 18px;
-                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-                        opacity: 0;
-                        z-index: 3;
-                    }
-                    
-                    .pr-card:hover .pr-quick-view-btn {
-                        opacity: 1;
-                    }
-                    
-                    .pr-quick-view-btn:hover {
-                        transform: scale(1.1);
-                        background: rgba(0, 0, 0, 0.65);
-                        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-                    }
-                    
-                    .pr-quick-view-btn:active {
-                        transform: scale(1.05);
-                    }
-                    
-                    /* SHARE - BOTTOM LEFT (TOGGLE ON HOVER) */
-                    .pr-share-btn {
+                    /* REPOSITIONED ACTION BUTTONS - BOTTOM CORNERS */
+                    .pr-actions {
                         position: absolute;
                         bottom: 15px;
                         left: 15px;
-                        width: 44px;
-                        height: 44px;
-                        border-radius: 22px;
+                        right: 15px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        opacity: 0;
+                        transform: translateY(10px);
+                        transition: all 0.3s;
+                        z-index: 2;
+                    }
+                    
+                    .pr-card:hover .pr-actions {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                    
+                    .pr-action-btn {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 20px;
                         background: rgba(0, 0, 0, 0.50);
                         backdrop-filter: blur(12px);
                         -webkit-backdrop-filter: blur(12px);
@@ -237,56 +188,44 @@
                         align-items: center;
                         justify-content: center;
                         cursor: pointer;
-                        transition: all 0.3s ease;
+                        transition: all 0.3s;
                         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                         color: white;
-                        font-size: 18px;
+                        font-size: 16px;
                         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-                        opacity: 0;
-                        z-index: 3;
                     }
                     
-                    .pr-card:hover .pr-share-btn {
-                        opacity: 1;
-                    }
-                    
-                    .pr-share-btn:hover {
+                    .pr-action-btn:hover {
                         transform: scale(1.1);
                         background: rgba(0, 0, 0, 0.65);
                         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-                    }
-                    
-                    .pr-share-btn:active {
-                        transform: scale(1.05);
                     }
                     
                     .pr-info {
                         padding: 20px;
                     }
                     
-                    /* CATEGORY AS LINK */
                     .pr-category {
                         display: inline-block;
-                        color: #007185;
+                        color: #0066cc;
                         padding: 0;
                         border: none;
                         background: transparent;
                         font-size: 12px;
                         font-weight: 500;
-                        margin-bottom: 12px;
+                        margin-bottom: 16px;
                         text-transform: capitalize;
                         cursor: pointer;
-                        text-decoration: none;
-                        transition: color 0.2s;
+                        text-decoration: underline;
+                        transition: color 0.3s;
                     }
                     
                     .pr-category:hover {
-                        color: #C45500;
-                        text-decoration: underline;
+                        color: #004499;
                     }
                     
                     .pr-title {
-                        font-size: 16px;
+                        font-size: 18px;
                         font-weight: 600;
                         color: #212529;
                         margin: 0 0 8px 0;
@@ -300,190 +239,69 @@
                     .pr-rating {
                         display: flex;
                         align-items: center;
-                        gap: 6px;
-                        margin-bottom: 10px;
+                        gap: 8px;
+                        margin-bottom: 12px;
                     }
                     
                     .pr-stars {
-                        color: #ffa41c;
+                        color: #fbbf24;
                         font-size: 14px;
                     }
                     
                     .pr-rating-count {
-                        color: #007185;
+                        color: #9ca3af;
                         font-size: 13px;
                     }
                     
                     .pr-price {
                         display: flex;
                         align-items: center;
-                        gap: 8px;
-                        margin-bottom: 12px;
+                        gap: 4px;
+                        margin-bottom: 16px;
                     }
                     
                     .pr-price-current {
-                        font-size: 20px;
+                        font-size: 24px;
                         font-weight: 700;
-                        color: #0F1111;
+                        color: #495057;
                     }
                     
                     .pr-price-current .pr-currency {
-                        font-size: 16px;
+                        font-size: 20px;
                     }
                     
                     .pr-price-original {
-                        font-size: 14px;
-                        color: #565959;
+                        font-size: 16px;
+                        color: #9ca3af;
                         text-decoration: line-through;
                     }
                     
-                    /* ADD TO CART BUTTON - AMAZON YELLOW */
                     .pr-add-to-cart {
                         width: 100%;
-                        padding: 10px 16px;
+                        padding: 12px;
                         background: #ffd814;
-                        color: #0F1111;
-                        border: 1px solid #fcd200;
+                        color: black;
+                        border: none;
                         border-radius: 8px;
                         font-weight: 600;
-                        font-size: 14px;
+                        font-size: 16px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
                         cursor: pointer;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         gap: 8px;
-                        transition: all 0.2s ease;
+                        transition: all 0.3s;
                     }
                     
                     .pr-add-to-cart:hover {
                         background: #f7ca00;
-                        border-color: #f2c200;
-                        box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+                        transform: translateY(-1px);
                     }
                     
                     .pr-add-to-cart:active {
-                        background: #f0b800;
-                        border-color: #e0a800;
-                        box-shadow: 0 1px 3px rgba(213, 217, 217, 0.5);
-                    }
-                    
-                    /* QUANTITY CONTROLS */
-                    .pr-qty-controls {
-                        display: none;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 8px;
-                        width: 100%;
-                    }
-                    
-                    .pr-qty-btn {
-                        background-color: #e7e9ec;
-                        border: 1px solid #adb1b8;
-                        width: 36px;
-                        height: 36px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-weight: bold;
-                        transition: all 0.2s ease;
-                        font-size: 18px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: #0F1111;
-                    }
-                    
-                    .pr-qty-btn:hover {
-                        background-color: #d5dbdb;
-                        border-color: #979aa1;
-                    }
-                    
-                    .pr-qty-btn:active {
-                        background-color: #c7d0d6;
-                    }
-                    
-                    /* MANUAL INPUT FOR QUANTITY */
-                    .pr-qty-input {
-                        font-weight: 600;
-                        width: 50px;
-                        text-align: center;
-                        background-color: white;
-                        padding: 8px;
-                        border-radius: 8px;
-                        font-size: 15px;
-                        border: 1px solid #888c8c;
-                        color: #0F1111;
-                        outline: none;
-                        transition: border-color 0.2s;
-                    }
-                    
-                    .pr-qty-input:focus {
-                        border-color: #e77600;
-                        box-shadow: 0 0 0 3px rgba(228, 121, 17, 0.15);
-                    }
-                    
-                    /* SAVE BUTTON - AMAZON YELLOW */
-                    .pr-save-btn {
-                        background-color: #ffd814;
-                        color: #0F1111;
-                        border: 1px solid #fcd200;
-                        padding: 8px 14px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-weight: 600;
-                        font-size: 13px;
-                        transition: all 0.2s ease;
-                        white-space: nowrap;
-                    }
-                    
-                    .pr-save-btn:hover {
-                        background-color: #f7ca00;
-                        border-color: #f2c200;
-                        box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
-                    }
-                    
-                    .pr-save-btn:active {
-                        background-color: #f0b800;
-                        border-color: #e0a800;
-                    }
-                    
-                    /* SAFETY MESSAGE */
-                    .pr-safety-message {
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background-color: rgba(255, 255, 255, 0.98);
-                        border: 2px solid #ff4444;
-                        border-radius: 12px;
-                        padding: 25px;
-                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                        z-index: 10000;
-                        display: none;
-                        text-align: center;
-                        max-width: 320px;
-                        width: 90%;
-                    }
-                    
-                    .pr-spinner {
-                        border: 3px solid #f3f3f3;
-                        border-top: 3px solid #ff4444;
-                        border-radius: 50%;
-                        width: 35px;
-                        height: 35px;
-                        animation: pr-spin 1s linear infinite;
-                        margin: 0 auto 18px;
-                    }
-                    
-                    @keyframes pr-spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    
-                    .pr-safety-text {
-                        color: #ff4444;
-                        font-weight: bold;
-                        font-size: 15px;
-                        line-height: 1.5;
+                        transform: translateY(0);
                     }
                     
                     /* Desktop Large (≥1200px) - 5 columns */
@@ -510,61 +328,74 @@
                         }
                     }
                     
-                    /* Mobile (≤768px) - 2 columns */
+                    /* Mobile (≤768px) - 2 columns - ALWAYS VISIBLE BUTTONS */
                     @media (max-width: 768px) {
                         .pr-grid {
                             grid-template-columns: repeat(2, 1fr);
-                            gap: 12px;
+                            gap: 15px;
                         }
                         
                         .pr-image-container {
-                            height: 160px;
+                            height: 140px;
                         }
                         
                         .pr-image-emoji {
-                            font-size: 36px;
+                            font-size: 32px;
                         }
                         
+                        /* MOBILE BADGE - DARK TRANSPARENT BACKDROP */
                         .pr-badge {
-                            top: 10px;
-                            right: 10px;
-                            padding: 5px 10px;
-                            font-size: 11px;
+                            top: 8px;
+                            right: 8px;
+                            padding: 4px 10px;
+                            border-radius: 14px;
+                            font-size: 10px;
+                            font-weight: 600;
+                            background: rgba(0, 0, 0, 0.50);
+                            backdrop-filter: blur(12px);
+                            -webkit-backdrop-filter: blur(12px);
+                            border: 1px solid rgba(0, 0, 0, 0.7);
+                            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
                         }
                         
-                        .pr-quick-view-btn,
-                        .pr-share-btn {
-                            width: 40px;
-                            height: 40px;
-                            font-size: 16px;
+                        /* MOBILE ACTION BUTTONS - ALWAYS VISIBLE WITH DARK BACKDROP */
+                        .pr-actions {
+                            opacity: 1;
+                            transform: translateY(0);
+                            bottom: 8px;
+                            left: 8px;
+                            right: 8px;
                         }
                         
-                        .pr-quick-view-btn {
-                            top: 10px;
-                            right: 10px;
+                        .pr-action-btn {
+                            width: 32px;
+                            height: 32px;
+                            font-size: 13px;
+                            border-radius: 16px;
+                            background: rgba(0, 0, 0, 0.50);
+                            backdrop-filter: blur(12px);
+                            -webkit-backdrop-filter: blur(12px);
+                            border: 1px solid rgba(0, 0, 0, 0.7);
+                            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
                         }
                         
-                        .pr-share-btn {
-                            bottom: 10px;
-                            left: 10px;
+                        .pr-action-btn:hover {
+                            background: rgba(0, 0, 0, 0.65);
+                            transform: scale(1);
                         }
                         
                         .pr-info {
-                            padding: 14px;
+                            padding: 12px;
                         }
                         
                         .pr-category {
-                            font-size: 11px;
+                            font-size: 10px;
                             margin-bottom: 10px;
                         }
                         
                         .pr-title {
                             font-size: 14px;
-                            margin-bottom: 6px;
-                        }
-                        
-                        .pr-rating {
-                            margin-bottom: 8px;
+                            margin-bottom: 5px;
                         }
                         
                         .pr-price {
@@ -576,48 +407,70 @@
                         }
                         
                         .pr-price-current .pr-currency {
-                            font-size: 15px;
+                            font-size: 16px;
                         }
                         
                         .pr-add-to-cart {
-                            padding: 9px 14px;
-                            font-size: 13px;
-                        }
-                        
-                        .pr-qty-btn {
-                            width: 38px;
-                            height: 38px;
-                            font-size: 18px;
-                        }
-                        
-                        .pr-qty-input {
-                            width: 48px;
-                            padding: 9px 6px;
-                            font-size: 15px;
-                        }
-                        
-                        .pr-save-btn {
-                            padding: 9px 14px;
-                            font-size: 13px;
-                        }
-                        
-                        .pr-qty-controls {
-                            gap: 6px;
+                            padding: 8px;
+                            font-size: 12px;
                         }
                     }
                     
-                    /* Small Mobile (≤480px) */
+                    /* Small Mobile (≤480px) - 2 columns - ALWAYS VISIBLE BUTTONS */
                     @media (max-width: 480px) {
                         .pr-grid {
-                            gap: 10px;
+                            gap: 12px;
                         }
                         
                         .pr-image-container {
-                            height: 140px;
+                            height: 120px;
+                        }
+                        
+                        .pr-image-emoji {
+                            font-size: 28px;
+                        }
+                        
+                        /* SMALL MOBILE BADGE - DARK TRANSPARENT BACKDROP */
+                        .pr-badge {
+                            top: 6px;
+                            right: 6px;
+                            padding: 3px 8px;
+                            border-radius: 12px;
+                            font-size: 9px;
+                            background: rgba(0, 0, 0, 0.50);
+                            backdrop-filter: blur(12px);
+                            -webkit-backdrop-filter: blur(12px);
+                            border: 1px solid rgba(0, 0, 0, 0.7);
+                            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+                        }
+                        
+                        /* SMALL MOBILE ACTION BUTTONS - ALWAYS VISIBLE WITH DARK BACKDROP */
+                        .pr-actions {
+                            opacity: 1;
+                            transform: translateY(0);
+                            bottom: 6px;
+                            left: 6px;
+                            right: 6px;
+                        }
+                        
+                        .pr-action-btn {
+                            width: 30px;
+                            height: 30px;
+                            font-size: 12px;
+                            border-radius: 15px;
+                            background: rgba(0, 0, 0, 0.50);
+                            backdrop-filter: blur(12px);
+                            -webkit-backdrop-filter: blur(12px);
+                            border: 1px solid rgba(0, 0, 0, 0.7);
+                            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+                        }
+                        
+                        .pr-action-btn:hover {
+                            background: rgba(0, 0, 0, 0.65);
                         }
                         
                         .pr-info {
-                            padding: 12px;
+                            padding: 10px;
                         }
                         
                         .pr-title {
@@ -627,28 +480,6 @@
                         .pr-price-current {
                             font-size: 16px;
                         }
-                        
-                        .pr-add-to-cart {
-                            padding: 8px 12px;
-                            font-size: 12px;
-                        }
-                        
-                        .pr-qty-btn {
-                            width: 36px;
-                            height: 36px;
-                            font-size: 17px;
-                        }
-                        
-                        .pr-qty-input {
-                            width: 45px;
-                            padding: 8px 5px;
-                            font-size: 14px;
-                        }
-                        
-                        .pr-save-btn {
-                            padding: 8px 12px;
-                            font-size: 12px;
-                        }
                     }
                 </style>
             `;
@@ -656,6 +487,9 @@
             document.head.insertAdjacentHTML('beforeend', styles);
         },
         
+        /**
+         * Check if URL is valid
+         */
         isValidURL: function(string) {
             try {
                 new URL(string);
@@ -665,6 +499,9 @@
             }
         },
         
+        /**
+         * Generate star rating HTML
+         */
         generateStars: function(rating) {
             let stars = '';
             const fullStars = Math.floor(rating);
@@ -686,6 +523,9 @@
             return stars;
         },
         
+        /**
+         * Generate image content HTML
+         */
         generateImageContent: function(product) {
             if (product.image && this.isValidURL(product.image)) {
                 return `
@@ -704,169 +544,58 @@
             }
         },
         
-        getCartItem: function(productId) {
-            return this.config.cart.find(item => item.id === productId);
-        },
-        
-        addToCart: function(productId) {
-            const unsavedProduct = this.hasUnsavedChanges();
-            if (unsavedProduct) {
-                this.showSafetyMessage(unsavedProduct);
-                return;
-            }
+        /**
+         * Generate action buttons HTML
+         */
+        generateActions: function(product) {
+            let actions = '<div class="pr-actions">';
             
-            const product = this.config.products.find(p => p.id === productId);
-            if (!product) return;
-            
-            const existingItem = this.getCartItem(productId);
-            
-            if (existingItem) {
-                existingItem.quantity += 1;
+            // Share button - Left side
+            if (this.config.enableShare) {
+                actions += `
+                    <button class="pr-action-btn" data-action="share" data-product-id="${product.id}" title="Share">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                `;
             } else {
-                this.config.cart.push({
-                    id: product.id,
-                    title: product.title,
-                    price: product.price,
-                    image: product.image,
-                    category: product.category,
-                    quantity: 1
-                });
+                actions += '<div></div>'; // Spacer for flexbox
             }
             
-            this.showQuantityControls(productId);
-            this.updateAllQuantityDisplays(productId);
-        },
-        
-        showQuantityControls: function(productId) {
-            const card = document.querySelector(`[data-product-id="${productId}"]`);
-            if (!card) return;
-            
-            const addBtn = card.querySelector('.pr-add-to-cart');
-            const qtyControls = card.querySelector('.pr-qty-controls');
-            const qtyInput = card.querySelector('.pr-qty-input');
-            
-            if (addBtn && qtyControls && qtyInput) {
-                addBtn.style.display = 'none';
-                qtyControls.style.display = 'flex';
-                
-                const cartItem = this.getCartItem(productId);
-                qtyInput.value = cartItem ? cartItem.quantity : 0;
+            // Quick View button - Right side
+            if (this.config.enableQuickView) {
+                actions += `
+                    <button class="pr-action-btn" data-action="quickView" data-product-id="${product.id}" title="Quick View">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                `;
             }
+            
+            actions += '</div>';
+            return actions;
         },
         
-        hideQuantityControls: function(productId) {
-            const card = document.querySelector(`[data-product-id="${productId}"]`);
-            if (!card) return;
-            
-            const addBtn = card.querySelector('.pr-add-to-cart');
-            const qtyControls = card.querySelector('.pr-qty-controls');
-            
-            if (addBtn && qtyControls) {
-                addBtn.style.display = 'flex';
-                qtyControls.style.display = 'none';
-            }
-        },
-        
-        increaseQty: function(productId) {
-            const cartItem = this.getCartItem(productId);
-            if (!cartItem) return;
-            
-            cartItem.quantity += 1;
-            this.updateAllQuantityDisplays(productId);
-        },
-        
-        decreaseQty: function(productId) {
-            const cartItem = this.getCartItem(productId);
-            if (!cartItem) return;
-            
-            cartItem.quantity -= 1;
-            
-            if (cartItem.quantity === 0) {
-                this.removeFromCart(productId);
-                this.hideQuantityControls(productId);
-            } else {
-                this.updateAllQuantityDisplays(productId);
-            }
-        },
-        
-        updateQtyFromInput: function(productId, value) {
-            const cartItem = this.getCartItem(productId);
-            if (!cartItem) return;
-            
-            const newQty = parseInt(value) || 0;
-            cartItem.quantity = Math.max(0, newQty);
-            
-            if (cartItem.quantity === 0) {
-                this.removeFromCart(productId);
-                this.hideQuantityControls(productId);
-            } else {
-                this.updateAllQuantityDisplays(productId);
-            }
-        },
-        
-        updateAllQuantityDisplays: function(productId) {
-            const cartItem = this.getCartItem(productId);
-            if (!cartItem) return;
-            
-            // Update all quantity inputs for this product (in product grid and cart view)
-            const qtyInputs = document.querySelectorAll(`.pr-qty-input[data-product-id="${productId}"]`);
-            qtyInputs.forEach(input => {
-                input.value = cartItem.quantity;
-            });
-            
-            // Trigger custom event for external cart updates
-            const event = new CustomEvent('productQuantityChanged', {
-                detail: { productId, quantity: cartItem.quantity }
-            });
-            document.dispatchEvent(event);
-        },
-        
-        saveQty: function(productId) {
-            this.hideQuantityControls(productId);
-            this.triggerCartUpdate();
-        },
-        
-        removeFromCart: function(productId) {
-            this.config.cart = this.config.cart.filter(item => item.id !== productId);
-            this.triggerCartUpdate();
-        },
-        
-        triggerCartUpdate: function() {
-            if (this.config.onCartUpdate) {
-                this.config.onCartUpdate(this.config.cart);
-            }
-        },
-        
+        /**
+         * Generate product card HTML
+         */
         generateCard: function(product) {
             if (!product.title || !product.price) return '';
-            
-            const cartItem = this.getCartItem(product.id);
-            const isInCart = cartItem !== undefined;
             
             const discount = this.config.showDiscount && product.originalPrice 
                 ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
                 : 0;
             
             const imageContent = this.generateImageContent(product);
+            const actions = this.generateActions(product);
             
             return `
                 <div class="pr-card" data-product-id="${product.id}" data-category="${product.category || ''}" data-price="${product.price}">
                     <div class="pr-image-container">
                         ${imageContent}
                         ${discount > 0 ? `<span class="pr-badge">${discount}% OFF</span>` : ''}
-                        ${this.config.enableQuickView ? `
-                            <button class="pr-quick-view-btn" data-action="quickView" data-product-id="${product.id}" title="Quick View">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        ` : ''}
-                        ${this.config.enableShare ? `
-                            <button class="pr-share-btn" data-action="share" data-product-id="${product.id}" title="Share">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                        ` : ''}
+                        ${actions}
                     </div>
                     <div class="pr-info">
-                        ${product.category ? `<a href="#" class="pr-category" data-action="category" data-category="${product.category}">${product.category}</a>` : ''}
+                        ${product.category ? `<div class="pr-category">${product.category}</div>` : ''}
                         <h3 class="pr-title">${product.title}</h3>
                         ${this.config.showRating && product.rating ? `
                             <div class="pr-rating">
@@ -878,20 +607,17 @@
                             <span class="pr-price-current"><span class="pr-currency">${this.config.currency}</span>${product.price.toFixed(2)}</span>
                             ${product.originalPrice ? `<span class="pr-price-original">${this.config.currency}${product.originalPrice.toFixed(2)}</span>` : ''}
                         </div>
-                        <button class="pr-add-to-cart" data-action="addToCart" data-product-id="${product.id}" style="display: ${isInCart ? 'none' : 'flex'}">
-                            Add to Cart
+                        <button class="pr-add-to-cart" data-action="addToCart" data-product-id="${product.id}">
+                             Add to Cart
                         </button>
-                        <div class="pr-qty-controls" data-product-id="${product.id}" style="display: ${isInCart ? 'flex' : 'none'}">
-                            <button class="pr-qty-btn" data-action="decrease" data-product-id="${product.id}">−</button>
-                            <input type="number" class="pr-qty-input" data-product-id="${product.id}" value="${cartItem ? cartItem.quantity : 0}" min="0" />
-                            <button class="pr-qty-btn" data-action="increase" data-product-id="${product.id}">+</button>
-                            <button class="pr-save-btn" data-action="save" data-product-id="${product.id}">Save</button>
-                        </div>
                     </div>
                 </div>
             `;
         },
         
+        /**
+         * Generate empty state HTML
+         */
         generateEmptyState: function() {
             return `
                 <div class="pr-empty">
@@ -903,29 +629,23 @@
             `;
         },
         
+        /**
+         * Attach event listeners to action buttons
+         */
         attachEventListeners: function() {
             const buttons = this.container.querySelectorAll('[data-action]');
             
             buttons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    e.preventDefault();
                     const action = e.currentTarget.dataset.action;
                     const productId = e.currentTarget.dataset.productId;
-                    const category = e.currentTarget.dataset.category;
                     
                     switch(action) {
                         case 'addToCart':
-                            this.addToCart(productId);
-                            break;
-                        case 'increase':
-                            this.increaseQty(productId);
-                            break;
-                        case 'decrease':
-                            this.decreaseQty(productId);
-                            break;
-                        case 'save':
-                            this.saveQty(productId);
+                            if (this.config.onAddToCart) {
+                                this.config.onAddToCart(productId);
+                            }
                             break;
                         case 'quickView':
                             if (this.config.onQuickView) {
@@ -937,45 +657,38 @@
                                 this.config.onShare(productId);
                             }
                             break;
-                        case 'category':
-                            if (this.config.onCategoryClick) {
-                                this.config.onCategoryClick(category);
-                            }
-                            break;
                     }
-                });
-            });
-            
-            // Add input event listeners for manual quantity changes
-            const qtyInputs = this.container.querySelectorAll('.pr-qty-input');
-            qtyInputs.forEach(input => {
-                input.addEventListener('input', (e) => {
-                    const productId = e.target.dataset.productId;
-                    const value = e.target.value;
-                    this.updateQtyFromInput(productId, value);
                 });
             });
         },
         
+        /**
+         * Render products to the container
+         */
         render: function(productsToRender) {
             if (!this.container) {
                 console.error('Container not initialized. Call init() first.');
                 return;
             }
             
+            // Use provided products or default to config products
             const products = productsToRender || this.config.products;
             
+            // Clear container
             this.container.innerHTML = '';
             
+            // Add grid class
             if (!this.container.classList.contains('pr-grid')) {
                 this.container.classList.add('pr-grid');
             }
             
+            // Check if products exist
             if (!products || products.length === 0) {
                 this.container.innerHTML = this.generateEmptyState();
                 return;
             }
             
+            // Generate and append product cards
             products.forEach(product => {
                 const cardHTML = this.generateCard(product);
                 if (cardHTML) {
@@ -983,23 +696,20 @@
                 }
             });
             
+            // Attach event listeners
             this.attachEventListeners();
         },
         
+        /**
+         * Update products array
+         */
         updateProducts: function(products) {
             this.config.products = products;
         },
         
-        getCart: function() {
-            return this.config.cart;
-        },
-        
-        clearCart: function() {
-            this.config.cart = [];
-            this.render();
-            this.triggerCartUpdate();
-        },
-        
+        /**
+         * Filter products by category
+         */
         filterByCategory: function(category) {
             if (!category || category === 'all') {
                 return this.config.products;
@@ -1007,10 +717,16 @@
             return this.config.products.filter(p => p.category === category);
         },
         
+        /**
+         * Filter products by price range
+         */
         filterByPrice: function(min, max) {
             return this.config.products.filter(p => p.price >= min && p.price <= max);
         },
         
+        /**
+         * Search products by text
+         */
         search: function(query) {
             const lowerQuery = query.toLowerCase();
             return this.config.products.filter(p => 
@@ -1020,6 +736,9 @@
             );
         },
         
+        /**
+         * Sort products
+         */
         sort: function(products, sortBy) {
             const sorted = [...products];
             
@@ -1037,46 +756,10 @@
                 default:
                     return sorted;
             }
-        },
-        
-        /**
-         * Update quantity from external source (like cart view)
-         * This syncs quantity changes across all displays
-         */
-        updateQuantityFromExternal: function(productId, quantity) {
-            const cartItem = this.getCartItem(productId);
-            if (!cartItem) return;
-            
-            cartItem.quantity = Math.max(0, parseInt(quantity) || 0);
-            
-            if (cartItem.quantity === 0) {
-                this.removeFromCart(productId);
-                this.hideQuantityControls(productId);
-            } else {
-                this.updateAllQuantityDisplays(productId);
-            }
-        },
-        
-        /**
-         * Listen for external quantity changes (from cart view)
-         */
-        listenToExternalChanges: function() {
-            document.addEventListener('cartQuantityChanged', (e) => {
-                const { productId, quantity } = e.detail;
-                this.updateQuantityFromExternal(productId, quantity);
-            });
         }
     };
     
-    // Initialize external change listener
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            ProductRenderer.listenToExternalChanges();
-        });
-    } else {
-        ProductRenderer.listenToExternalChanges();
-    }
-    
+    // Expose to global scope
     window.ProductRenderer = ProductRenderer;
     
 })(window);
