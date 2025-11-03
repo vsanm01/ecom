@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBC Card</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .card {
+            background: white;
+            border: 3px solid #999;
+            border-radius: 20px;
+            padding: 30px 40px;
+            width: 350px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            color: #5555cc;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .header:hover {
+            color: #3333aa;
+            text-decoration: underline;
+        }
+
+        .content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cell-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .label {
+            color: #5555cc;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .input-box {
+            border: 3px solid #3333cc;
+            background: white;
+            width: 100px;
+            height: 30px;
+            border-radius: 5px;
+        }
+
+        .data-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .data-label {
+            color: #22cc66;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .data-box {
+            border: 3px solid #666;
+            background: white;
+            width: 120px;
+            height: 30px;
+            border-radius: 8px;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            height: 80vh;
+            margin: auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transition: background 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+        }
+
+        #modal-welcome-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Override module styles for modal */
+        #modal-welcome-container .dbc-welcome-wrapper {
+            min-height: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header" id="dbc-header">DBC</div>
+        <div class="content">
+            <div class="cell-section">
+                <span class="label">Cell No</span>
+                <div class="input-box"></div>
+            </div>
+            <div class="data-section">
+                <span class="data-label">DATA</span>
+                <div class="data-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="welcomeModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">&times;</button>
+            <div id="modal-welcome-container"></div>
+        </div>
+    </div>
+
+    <!-- Load DBC Welcome Module from CDN -->
+    <script src="https://cdn.jsdelivr.net/gh/vsanm01/ecom/dbc_welcome_playstore.js"></script>
+    
+    <script>
+        // Get elements
+        const dbcHeader = document.getElementById('dbc-header');
+        const modal = document.getElementById('welcomeModal');
+        const closeBtn = document.getElementById('closeModal');
+        const modalContainer = document.getElementById('modal-welcome-container');
+
+        // Open modal when DBC is clicked
+        dbcHeader.addEventListener('click', function() {
+            modal.classList.add('active');
+            
+            // Render the welcome component in the modal with custom Play Store URL
+            if (typeof DBCWelcome !== 'undefined') {
+                DBCWelcome.render('modal-welcome-container', {
+                    title: 'Welcome to DBC 101',
+                    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.google.android.apps.bard'
+                });
+            } else {
+                console.error('DBCWelcome module not loaded');
+                modalContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: red;">Error: Welcome module failed to load</div>';
+            }
+        });
+
+        // Close modal when close button is clicked
+        closeBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+
+        // Close modal when clicking outside the content
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                modal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
