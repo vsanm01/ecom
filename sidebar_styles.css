@@ -1,0 +1,412 @@
+/**
+ * Responsive Sidebar Styles
+ * Version: 1.0.0
+ * Companion CSS for sidebar_module.js
+ */
+
+/* ============================================
+   SIDEBAR CONTAINER
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: left 0.3s ease;
+    z-index: 1001;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar.sidebar-open {
+    left: 0;
+}
+
+/* Right-aligned sidebar */
+.sidebar[data-direction="right"] {
+    left: auto;
+    right: -100%;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+}
+
+.sidebar[data-direction="right"].sidebar-open {
+    right: 0;
+}
+
+/* ============================================
+   SIDEBAR HEADER
+   ============================================ */
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.sidebar-close-btn {
+    background: none;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    color: #6b7280;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.sidebar-close-btn:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+/* ============================================
+   SIDEBAR MENU
+   ============================================ */
+
+.sidebar-menu {
+    padding: 10px 0;
+}
+
+.sidebar-menu-item {
+    position: relative;
+}
+
+/* Menu Links */
+.sidebar-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.3s;
+    border-left: 3px solid transparent;
+    font-size: 15px;
+}
+
+.sidebar-menu-link:hover {
+    background: #f3f4f6;
+    border-left-color: #2563eb;
+    color: #2563eb;
+}
+
+.sidebar-menu-link.active {
+    background: #eff6ff;
+    border-left-color: #2563eb;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+/* Menu Toggles (for submenus) */
+.sidebar-menu-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    border-left: 3px solid transparent;
+    color: #374151;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.sidebar-menu-toggle:hover {
+    background: #f3f4f6;
+    border-left-color: #2563eb;
+    color: #2563eb;
+}
+
+.sidebar-menu-toggle.active {
+    background: #eff6ff;
+    border-left-color: #2563eb;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+/* ============================================
+   SIDEBAR ICONS & LABELS
+   ============================================ */
+
+.sidebar-icon {
+    font-size: 18px;
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sidebar-label {
+    flex: 1;
+}
+
+.sidebar-count {
+    background: #ef4444;
+    color: white;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+.sidebar-arrow {
+    font-size: 10px;
+    transition: transform 0.3s;
+    margin-left: auto;
+}
+
+.sidebar-arrow.sidebar-arrow-open {
+    transform: rotate(180deg);
+}
+
+/* ============================================
+   SUBMENU
+   ============================================ */
+
+.sidebar-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.sidebar-submenu.sidebar-submenu-open {
+    max-height: 1000px;
+}
+
+/* ============================================
+   OVERLAY
+   ============================================ */
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.sidebar-overlay.sidebar-overlay-show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================
+   HAMBURGER BUTTON (Optional)
+   ============================================ */
+
+.sidebar-hamburger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.3s;
+}
+
+.sidebar-hamburger span {
+    width: 25px;
+    height: 3px;
+    background: #1f2937;
+    border-radius: 3px;
+    transition: all 0.3s;
+}
+
+.sidebar-hamburger:hover span {
+    background: #2563eb;
+}
+
+.sidebar-hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.sidebar-hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.sidebar-hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 280px !important;
+    }
+    
+    .sidebar-header h3 {
+        font-size: 18px;
+    }
+    
+    .sidebar-menu-link,
+    .sidebar-menu-toggle {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        width: 100% !important;
+    }
+}
+
+/* ============================================
+   DARK MODE (Optional)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    .sidebar {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+    
+    .sidebar-header {
+        background: #111827;
+        border-bottom-color: #374151;
+    }
+    
+    .sidebar-header h3 {
+        color: #f9fafb;
+    }
+    
+    .sidebar-close-btn {
+        color: #9ca3af;
+    }
+    
+    .sidebar-close-btn:hover {
+        background: #374151;
+        color: #f9fafb;
+    }
+    
+    .sidebar-menu-link,
+    .sidebar-menu-toggle {
+        color: #d1d5db;
+    }
+    
+    .sidebar-menu-link:hover,
+    .sidebar-menu-toggle:hover {
+        background: #374151;
+    }
+    
+    .sidebar-menu-link.active,
+    .sidebar-menu-toggle.active {
+        background: #1e3a8a;
+        color: #93c5fd;
+    }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.sidebar.sidebar-open {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+.sidebar[data-direction="right"].sidebar-open {
+    animation: slideInRight 0.3s ease-out;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.sidebar-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 10px 0;
+}
+
+.sidebar-section-title {
+    padding: 10px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    margin-top: auto;
+}
