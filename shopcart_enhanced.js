@@ -1,6 +1,6 @@
 /**
- * ShopCart.js v2.0.0
- * Enhanced shopping cart library with manual save functionality
+ * ShopCart.js v1.1.0
+ * Enhanced shopping cart library with order placement and POS billing
  * (c) 2025
  * MIT License
  */
@@ -12,7 +12,7 @@
         constructor(options = {}) {
             this.cart = [];
             this.products = [];
-            this.tempEdits = new Map(); // Track unsaved changes
+            this.tempEdits = new Map();
             this.options = {
                 currency: options.currency || '$',
                 locale: options.locale || 'en-US',
@@ -20,6 +20,9 @@
                 onCartUpdate: options.onCartUpdate || null,
                 onNotification: options.onNotification || null,
                 onUnsavedChanges: options.onUnsavedChanges || null,
+                onOrderPlaced: options.onOrderPlaced || null,
+                whatsappNumber: options.whatsappNumber || '',
+                storeName: options.storeName || 'My Store',
                 selectors: {
                     cartItems: options.selectors?.cartItems || '#cartItems',
                     cartCount: options.selectors?.cartCount || '#cartCount',
@@ -29,14 +32,10 @@
                 }
             };
 
-            // Load cart from localStorage if available
             this.loadCart();
-            
-            // Inject required CSS
             this.injectStyles();
         }
 
-        // Inject custom styles
         injectStyles() {
             if (document.getElementById('shopcart-styles')) return;
             
@@ -259,11 +258,299 @@
                 .notification-info {
                     border-left: 4px solid ${this.options.primaryColor};
                 }
+                
+                /* Checkout Modal */
+                .checkout-modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.6);
+                    z-index: 2000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s ease;
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                .checkout-modal {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 32px;
+                    max-width: 500px;
+                    width: 90%;
+                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+                    animation: scaleIn 0.3s ease;
+                }
+                
+                @keyframes scaleIn {
+                    from {
+                        transform: scale(0.9);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                }
+                
+                .checkout-modal h2 {
+                    margin: 0 0 8px 0;
+                    font-size: 24px;
+                    color: #111827;
+                }
+                
+                .checkout-modal p {
+                    margin: 0 0 24px 0;
+                    color: #6b7280;
+                    font-size: 15px;
+                }
+                
+                .checkout-options {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+                
+                .checkout-option-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    padding: 20px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 10px;
+                    background: white;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    font-size: 16px;
+                }
+                
+                .checkout-option-btn:hover {
+                    border-color: ${this.options.primaryColor};
+                    background: #f9fafb;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+                
+                .checkout-option-icon {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 24px;
+                    flex-shrink: 0;
+                }
+                
+                .whatsapp-icon {
+                    background: #25D366;
+                    color: white;
+                }
+                
+                .pos-icon {
+                    background: #6366f1;
+                    color: white;
+                }
+                
+                .checkout-option-content {
+                    flex: 1;
+                    text-align: left;
+                }
+                
+                .checkout-option-title {
+                    font-weight: 600;
+                    color: #111827;
+                    margin-bottom: 4px;
+                }
+                
+                .checkout-option-desc {
+                    font-size: 13px;
+                    color: #6b7280;
+                }
+                
+                .modal-close-btn {
+                    margin-top: 16px;
+                    width: 100%;
+                    padding: 12px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 8px;
+                    background: white;
+                    color: #374151;
+                    cursor: pointer;
+                    font-size: 15px;
+                    transition: all 0.2s;
+                }
+                
+                .modal-close-btn:hover {
+                    background: #f3f4f6;
+                }
+                
+                /* POS Receipt */
+                .pos-receipt-container {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    z-index: 2500;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s ease;
+                }
+                
+                .pos-receipt {
+                    background: white;
+                    width: 400px;
+                    max-width: 90%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    border-radius: 8px;
+                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                    font-family: 'Courier New', monospace;
+                }
+                
+                .pos-receipt-content {
+                    padding: 30px;
+                }
+                
+                .pos-header {
+                    text-align: center;
+                    border-bottom: 2px dashed #000;
+                    padding-bottom: 20px;
+                    margin-bottom: 20px;
+                }
+                
+                .pos-store-name {
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                }
+                
+                .pos-receipt-title {
+                    font-size: 18px;
+                    margin-bottom: 12px;
+                }
+                
+                .pos-date {
+                    font-size: 12px;
+                    color: #666;
+                }
+                
+                .pos-items {
+                    margin-bottom: 20px;
+                }
+                
+                .pos-item {
+                    margin-bottom: 12px;
+                    padding-bottom: 8px;
+                    border-bottom: 1px solid #e5e7eb;
+                }
+                
+                .pos-item-name {
+                    font-weight: bold;
+                    margin-bottom: 4px;
+                }
+                
+                .pos-item-details {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 13px;
+                }
+                
+                .pos-totals {
+                    border-top: 2px dashed #000;
+                    padding-top: 16px;
+                    margin-top: 16px;
+                }
+                
+                .pos-total-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                    font-size: 14px;
+                }
+                
+                .pos-total-row.grand-total {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-top: 12px;
+                    padding-top: 12px;
+                    border-top: 2px solid #000;
+                }
+                
+                .pos-footer {
+                    text-align: center;
+                    margin-top: 24px;
+                    padding-top: 20px;
+                    border-top: 2px dashed #000;
+                    font-size: 12px;
+                    color: #666;
+                }
+                
+                .pos-actions {
+                    display: flex;
+                    gap: 12px;
+                    margin-top: 20px;
+                }
+                
+                .pos-btn {
+                    flex: 1;
+                    padding: 12px;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 600;
+                    transition: all 0.2s;
+                }
+                
+                .pos-btn-print {
+                    background: ${this.options.primaryColor};
+                    color: white;
+                }
+                
+                .pos-btn-print:hover {
+                    background: ${this.adjustColor(this.options.primaryColor, -20)};
+                }
+                
+                .pos-btn-close {
+                    background: #6b7280;
+                    color: white;
+                }
+                
+                .pos-btn-close:hover {
+                    background: #4b5563;
+                }
+                
+                @media print {
+                    .pos-receipt-container {
+                        background: white;
+                        position: static;
+                    }
+                    
+                    .pos-receipt {
+                        box-shadow: none;
+                        max-height: none;
+                        width: 100%;
+                    }
+                    
+                    .pos-actions {
+                        display: none;
+                    }
+                }
             `;
             document.head.appendChild(style);
         }
 
-        // Adjust color brightness
         adjustColor(color, amount) {
             const hex = color.replace('#', '');
             const num = parseInt(hex, 16);
@@ -273,17 +560,14 @@
             return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
         }
 
-        // Initialize with products
         setProducts(products) {
             this.products = products;
         }
 
-        // Format price
         formatPrice(price) {
             return this.options.currency + price.toFixed(2);
         }
 
-        // Check if URL is valid
         isValidURL(string) {
             try {
                 new URL(string);
@@ -293,14 +577,12 @@
             }
         }
 
-        // Show notification
         showNotification(type, message) {
             if (this.options.onNotification) {
                 this.options.onNotification(type, message);
                 return;
             }
             
-            // Remove existing notifications
             const existing = document.querySelectorAll('.shopcart-notification');
             existing.forEach(el => el.remove());
             
@@ -325,27 +607,241 @@
             }, 3000);
         }
 
-        // Get element
         $(selector) {
             return document.querySelector(selector);
         }
 
-        // Get all elements
         $$(selector) {
             return document.querySelectorAll(selector);
         }
 
-        // Check for unsaved changes
         hasUnsavedChanges() {
             return this.tempEdits.size > 0;
         }
 
-        // Get unsaved changes count
         getUnsavedCount() {
             return this.tempEdits.size;
         }
 
-        // Add to cart
+        // Show checkout modal
+        showCheckoutModal(checkoutData = null) {
+            const overlay = document.createElement('div');
+            overlay.className = 'checkout-modal-overlay';
+            overlay.innerHTML = `
+                <div class="checkout-modal">
+                    <h2>Choose Checkout Method</h2>
+                    <p>How would you like to complete this order?</p>
+                    
+                    <div class="checkout-options">
+                        <button class="checkout-option-btn" data-method="whatsapp">
+                            <div class="checkout-option-icon whatsapp-icon">
+                                📱
+                            </div>
+                            <div class="checkout-option-content">
+                                <div class="checkout-option-title">WhatsApp Order</div>
+                                <div class="checkout-option-desc">Send order details via WhatsApp</div>
+                            </div>
+                        </button>
+                        
+                        <button class="checkout-option-btn" data-method="pos">
+                            <div class="checkout-option-icon pos-icon">
+                                🧾
+                            </div>
+                            <div class="checkout-option-content">
+                                <div class="checkout-option-title">POS Billing</div>
+                                <div class="checkout-option-desc">Generate printable receipt</div>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <button class="modal-close-btn">Cancel</button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Event listeners
+            overlay.querySelector('[data-method="whatsapp"]').addEventListener('click', () => {
+                overlay.remove();
+                this.handleWhatsAppCheckout(checkoutData);
+            });
+            
+            overlay.querySelector('[data-method="pos"]').addEventListener('click', () => {
+                overlay.remove();
+                this.showPOSReceipt(checkoutData);
+            });
+            
+            overlay.querySelector('.modal-close-btn').addEventListener('click', () => {
+                overlay.remove();
+            });
+            
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                }
+            });
+        }
+
+        // Handle WhatsApp checkout
+        handleWhatsAppCheckout(checkoutData) {
+            const cartItems = this.getCart();
+            const total = this.getCartTotal();
+            
+            let message = `*New Order from ${this.options.storeName}*\n\n`;
+            message += `*Items:*\n`;
+            
+            cartItems.forEach(item => {
+                message += `• ${item.title} x${item.quantity} - ${this.formatPrice(item.price * item.quantity)}\n`;
+            });
+            
+            message += `\n*Total: ${this.formatPrice(total)}*\n\n`;
+            
+            if (checkoutData) {
+                message += `*Customer Details:*\n`;
+                if (checkoutData.name) message += `Name: ${checkoutData.name}\n`;
+                if (checkoutData.email) message += `Email: ${checkoutData.email}\n`;
+                if (checkoutData.phone) message += `Phone: ${checkoutData.phone}\n`;
+                if (checkoutData.address) message += `Address: ${checkoutData.address}\n`;
+            }
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappURL = `https://wa.me/${this.options.whatsappNumber}?text=${encodedMessage}`;
+            
+            window.open(whatsappURL, '_blank');
+            
+            // Clear cart after order
+            this.placeOrder(checkoutData);
+        }
+
+        // Show POS Receipt
+        showPOSReceipt(checkoutData) {
+            const cartItems = this.getCart();
+            const total = this.getCartTotal();
+            const itemCount = this.getCartCount();
+            const orderNumber = 'ORD-' + Date.now().toString().slice(-6);
+            const currentDate = new Date().toLocaleString();
+            
+            const receiptContainer = document.createElement('div');
+            receiptContainer.className = 'pos-receipt-container';
+            
+            let itemsHTML = '';
+            cartItems.forEach(item => {
+                const subtotal = item.price * item.quantity;
+                itemsHTML += `
+                    <div class="pos-item">
+                        <div class="pos-item-name">${item.title}</div>
+                        <div class="pos-item-details">
+                            <span>${item.quantity} x ${this.formatPrice(item.price)}</span>
+                            <span>${this.formatPrice(subtotal)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            let customerHTML = '';
+            if (checkoutData) {
+                customerHTML = `
+                    <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+                        <div style="font-weight: bold; margin-bottom: 8px;">CUSTOMER DETAILS</div>
+                        ${checkoutData.name ? `<div>Name: ${checkoutData.name}</div>` : ''}
+                        ${checkoutData.phone ? `<div>Phone: ${checkoutData.phone}</div>` : ''}
+                        ${checkoutData.email ? `<div>Email: ${checkoutData.email}</div>` : ''}
+                        ${checkoutData.address ? `<div>Address: ${checkoutData.address}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            receiptContainer.innerHTML = `
+                <div class="pos-receipt">
+                    <div class="pos-receipt-content">
+                        <div class="pos-header">
+                            <div class="pos-store-name">${this.options.storeName}</div>
+                            <div class="pos-receipt-title">SALES RECEIPT</div>
+                            <div class="pos-date">Order #${orderNumber}</div>
+                            <div class="pos-date">${currentDate}</div>
+                        </div>
+                        
+                        ${customerHTML}
+                        
+                        <div class="pos-items">
+                            ${itemsHTML}
+                        </div>
+                        
+                        <div class="pos-totals">
+                            <div class="pos-total-row">
+                                <span>Items:</span>
+                                <span>${itemCount}</span>
+                            </div>
+                            <div class="pos-total-row">
+                                <span>Subtotal:</span>
+                                <span>${this.formatPrice(total)}</span>
+                            </div>
+                            <div class="pos-total-row grand-total">
+                                <span>TOTAL:</span>
+                                <span>${this.formatPrice(total)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="pos-footer">
+                            <div>Thank you for your purchase!</div>
+                            <div style="margin-top: 8px;">Please come again</div>
+                        </div>
+                        
+                        <div class="pos-actions">
+                            <button class="pos-btn pos-btn-print">🖨️ Print</button>
+                            <button class="pos-btn pos-btn-close">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(receiptContainer);
+            
+            // Event listeners
+            receiptContainer.querySelector('.pos-btn-print').addEventListener('click', () => {
+                window.print();
+            });
+            
+            receiptContainer.querySelector('.pos-btn-close').addEventListener('click', () => {
+                receiptContainer.remove();
+                // Clear cart after closing receipt
+                this.placeOrder(checkoutData);
+            });
+            
+            receiptContainer.addEventListener('click', (e) => {
+                if (e.target === receiptContainer) {
+                    receiptContainer.remove();
+                    this.placeOrder(checkoutData);
+                }
+            });
+        }
+
+        // Place order and clear cart
+        placeOrder(checkoutData = null) {
+            const orderData = {
+                orderNumber: 'ORD-' + Date.now().toString().slice(-6),
+                items: [...this.cart],
+                total: this.getCartTotal(),
+                itemCount: this.getCartCount(),
+                customer: checkoutData,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Trigger callback if provided
+            if (this.options.onOrderPlaced) {
+                this.options.onOrderPlaced(orderData);
+            }
+            
+            // Clear the cart
+            this.cart = [];
+            this.tempEdits.clear();
+            this.saveCart();
+            this.updateCartUI();
+            this.notifyUnsavedChanges();
+            
+            this.showNotification('success', 'Order placed successfully! Cart cleared.');
+        }
+
         addToCart(productId, quantity = 1) {
             const product = this.products.find(p => p.id === productId);
             
@@ -379,7 +875,6 @@
             return true;
         }
 
-        // Start editing quantity (temporary)
         startEditQuantity(productId, change) {
             const product = this.products.find(p => p.id === productId);
             const cartItem = this.cart.find(item => item.id === productId);
@@ -389,11 +884,9 @@
                 return;
             }
             
-            // Get current temp value or actual cart value
             let currentTemp = this.tempEdits.get(productId) ?? cartItem.quantity;
             let newQuantity = currentTemp + change;
             
-            // Validation
             if (newQuantity < 0) {
                 this.showNotification('warning', 'Quantity cannot be negative');
                 return;
@@ -416,7 +909,6 @@
             this.notifyUnsavedChanges();
         }
 
-        // Set quantity directly (temporary)
         setTempQuantity(productId, value) {
             const product = this.products.find(p => p.id === productId);
             const cartItem = this.cart.find(item => item.id === productId);
@@ -444,7 +936,6 @@
             this.notifyUnsavedChanges();
         }
 
-        // Save quantity changes
         saveQuantity(productId) {
             const tempQuantity = this.tempEdits.get(productId);
             
@@ -474,7 +965,6 @@
             }
         }
 
-        // Cancel quantity changes
         cancelQuantity(productId) {
             this.tempEdits.delete(productId);
             this.updateCartUI();
@@ -482,7 +972,6 @@
             this.showNotification('info', 'Changes cancelled');
         }
 
-        // Save all quantity changes
         saveAllQuantities() {
             if (!this.hasUnsavedChanges()) {
                 this.showNotification('info', 'No changes to save');
@@ -515,7 +1004,6 @@
             this.notifyUnsavedChanges();
         }
 
-        // Cancel all quantity changes
         cancelAllQuantities() {
             if (!this.hasUnsavedChanges()) {
                 return;
@@ -529,14 +1017,12 @@
             }
         }
 
-        // Notify about unsaved changes
         notifyUnsavedChanges() {
             if (this.options.onUnsavedChanges) {
                 this.options.onUnsavedChanges(this.hasUnsavedChanges(), this.getUnsavedCount());
             }
         }
 
-        // Remove from cart
         removeFromCart(productId) {
             this.cart = this.cart.filter(item => item.id !== productId);
             this.tempEdits.delete(productId);
@@ -546,7 +1032,6 @@
             this.notifyUnsavedChanges();
         }
 
-        // Update cart UI
         updateCartUI() {
             const cartItems = this.$(this.options.selectors.cartItems);
             const cartCount = this.$(this.options.selectors.cartCount);
@@ -653,7 +1138,6 @@
             if (cartCount) cartCount.textContent = itemCount;
             if (cartTotal) cartTotal.textContent = this.formatPrice(total);
             
-            // Attach event listeners
             this.attachCartEventListeners();
             
             if (this.options.onCartUpdate) {
@@ -661,10 +1145,8 @@
             }
         }
 
-        // Attach event listeners to cart items
         attachCartEventListeners() {
-            // Quantity buttons
-            this.$$('.quantity-btn').forEach(btn => {
+            this.$('.quantity-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const productId = btn.dataset.productId;
                     const action = btn.dataset.action;
@@ -673,32 +1155,28 @@
                 });
             });
 
-            // Quantity inputs
-            this.$$('.quantity-input').forEach(input => {
+            this.$('.quantity-input').forEach(input => {
                 input.addEventListener('change', () => {
                     const productId = input.dataset.productId;
                     this.setTempQuantity(productId, input.value);
                 });
             });
 
-            // Save buttons
-            this.$$('.save-qty-btn').forEach(btn => {
+            this.$('.save-qty-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const productId = btn.dataset.productId;
                     this.saveQuantity(productId);
                 });
             });
 
-            // Cancel buttons
-            this.$$('.cancel-qty-btn').forEach(btn => {
+            this.$('.cancel-qty-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const productId = btn.dataset.productId;
                     this.cancelQuantity(productId);
                 });
             });
 
-            // Remove buttons
-            this.$$('.remove-btn').forEach(btn => {
+            this.$('.remove-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const productId = btn.dataset.productId;
                     this.removeFromCart(productId);
@@ -706,7 +1184,6 @@
             });
         }
 
-        // Toggle cart
         toggleCart() {
             const cartSidebar = this.$(this.options.selectors.cartSidebar);
             const wishlistSidebar = this.$(this.options.selectors.wishlistSidebar);
@@ -726,7 +1203,6 @@
             }
         }
 
-        // Close cart
         closeCart() {
             if (this.hasUnsavedChanges()) {
                 if (!confirm('You have unsaved changes. Close anyway?')) {
@@ -743,7 +1219,6 @@
             return true;
         }
 
-        // Show overlay
         showOverlay() {
             if (!this.$('.shopcart-overlay')) {
                 const overlay = document.createElement('div');
@@ -754,7 +1229,6 @@
             }
         }
 
-        // Hide overlay
         hideOverlay() {
             const overlay = this.$('.shopcart-overlay');
             if (overlay) {
@@ -762,22 +1236,18 @@
             }
         }
 
-        // Get cart data
         getCart() {
             return this.cart;
         }
 
-        // Get cart total
         getCartTotal() {
             return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
         }
 
-        // Get cart count
         getCartCount() {
             return this.cart.reduce((count, item) => count + item.quantity, 0);
         }
 
-        // Clear cart
         clearCart() {
             if (confirm('Clear all items from cart?')) {
                 this.cart = [];
@@ -789,7 +1259,6 @@
             }
         }
 
-        // Save cart to localStorage
         saveCart() {
             try {
                 localStorage.setItem('shopcart_items', JSON.stringify(this.cart));
@@ -798,7 +1267,6 @@
             }
         }
 
-        // Load cart from localStorage
         loadCart() {
             try {
                 const saved = localStorage.getItem('shopcart_items');
